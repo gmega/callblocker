@@ -1,0 +1,16 @@
+- model: blocker.source
+  pk: 1
+  fields:
+    name: Caller ID
+    description: Numbers learnt from existing calls through caller ID.
+- model: blocker.source
+  pk: 2
+  fields:
+    name: User Defined
+    description: Numbers added manually by the user.
+- model: blocker.source
+  pk: 3
+  fields:
+    name: Quem Perturba
+    description: Numbers fed by the scraping https://quemperturba.inerciasensorial.com.br/.
+
