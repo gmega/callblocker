@@ -3,6 +3,7 @@ import logging
 import re
 from abc import ABC, abstractmethod
 from asyncio import Event, StreamWriter, StreamReader
+from collections import deque
 from typing import Union, List, Dict, Tuple, Optional
 
 import serial_asyncio
@@ -87,7 +88,7 @@ class PySerialDevice(SerialDeviceFactory):
         self.baud = baud
 
     async def connect(self, loop):
-        return await serial_asyncio.open_serial_connection(loop=loop, port=self.port, baudrate=self.baud)
+        return await serial_asyncio.open_serial_connection(loop=loop, url=self.port, baudrate=self.baud)
 
 
 class Modem(object):
@@ -266,7 +267,7 @@ class EventStream(object):
     def __init__(self, parent: Modem):
         self.parent = parent
         self.has_events = Event()
-        self.events = []
+        self.events = deque()
         self._aiter = self._stream()
         self.ex = None
 
@@ -287,7 +288,7 @@ class EventStream(object):
         while True:
             # Returns events if there are any to return.
             if self.events:
-                yield self.events.pop()
+                yield self.events.popleft()
                 continue
 
             # No events to return.
