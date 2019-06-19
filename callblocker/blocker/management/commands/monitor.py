@@ -3,7 +3,9 @@ from asyncio import CancelledError
 from cmd import Cmd
 from threading import Thread
 
-import sys
+<< << << < HEAD
+== == == =
+>> >> >> > c85018ecbe64548e7fe19aaf0c7472fb2c8ce865
 from django.conf import settings
 from django.core.management import BaseCommand
 
@@ -29,9 +31,6 @@ class Prompt(Cmd):
 
         asyncio.run_coroutine_threadsafe(self.modem.loop(), self.loop)
         self._enable_monitor()
-
-    def do_dettach(self, _):
-        self.modem.close()
 
     def do_commands(self, _):
         print('Valid commands are: %s' % ', '.join(self.modem.modem_type.COMMANDS), file=self.stdout)
