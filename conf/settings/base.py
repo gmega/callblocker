@@ -13,8 +13,12 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 import os
 
 # Modem configuration.
+
 MODEM_DEVICE = '/dev/ttyACM0'
 MODEM_BAUD = 115200
+
+SERVICE_PROVIDER = 'Vivo'
+MODEM_TYPE = 'CX930xx'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -3,10 +3,10 @@ import textwrap
 
 import pytest
 
-from callblocker.blocker.blocker import CallMonitor, Vivo
+from callblocker.blocker.callmonitor import CallMonitor, Vivo
 from callblocker.blocker.models import PhoneNumber, CallEvent, Source
-from callblocker.blocker.modem import Modem
-from callblocker.blocker.tests.fakeserial import CX930xx_fake
+from callblocker.core.modem import Modem
+from callblocker.core.tests.fakeserial import CX930xx_fake
 
 
 @pytest.mark.django_db

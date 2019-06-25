@@ -2,13 +2,13 @@ import asyncio
 import time
 from asyncio import Protocol, StreamReader, Event
 
-from callblocker.blocker.modem import SerialDeviceFactory, CX930xx, ModemType
+from callblocker.core.modem import ModemType, CX930xx, SerialDeviceFactory
 
 CX930xx_fake = ModemType(
     # We are forced by https://bugs.python.org/issue17083 to create a different modem type that uses
     # '\n' as a line separator for use in our simulations.
     newline=b'\n',
-    encoding='ASCII',
+    encoding=CX930xx.encoding,
     command_timeout=CX930xx.command_timeout,
     commands=CX930xx.commands
 )

@@ -1,0 +1,114 @@
+import asyncio
+import re
+from typing import Union
+
+from django.conf import settings
+from django.core.management import BaseCommand
+from django.utils import timezone
+
+from callblocker.blocker.callmonitor import CallMonitor, Vivo
+from callblocker.blocker.models import PhoneNumber, Source, CallEvent
+from callblocker.core.console import BaseModemConsole
+from callblocker.core.modem import ModemType
+
+
+class Command(BaseCommand):
+    help = 'Starts the call monitor console app.'
+
+    def handle(self, *args, **options):
+        Console(
+            stdout=self.stdout,
+            device=settings.MODEM_DEVICE,
+            baud_rate=settings.MODEM_BAUD
+        ).cmdloop('Type "help" to see available commands.')
+
+
+class Console(BaseModemConsole):
+    NUMBER_REGEX = re.compile(r'([0-9]+) ([0-9]+)\s*$')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Starts the call monitor.
+        self.blocker = CallMonitor(Vivo(), self.modem)
+        asyncio.run_coroutine_threadsafe(self.blocker.loop(), self.loop)
+
+        # Initializes the modem.
+        asyncio.run_coroutine_threadsafe(self.modem.run_command_set(ModemType.INIT), self.loop).result()
+
+    def do_blocknumber(self, arg):
+        number = self._get_number(arg)
+        if not number:
+            return
+        number.block = True
+        number.save()
+        print('Number %s will now be blocked.' % arg)
+
+    def help_blocknumber(self):
+        return 'Starts blocking a given number'
+
+    def do_clearnumber(self, arg):
+        number = self._get_number(arg)
+        if not number:
+            return
+        number.block = False
+        number.save()
+        print('Number %s will now be allowed.' % arg)
+
+    def do_status(self, arg):
+        number = self._get_number(arg, create=False)
+        if not number:
+            return
+        print('Number is %s.' % ('BLOCKED' if number.block else 'ALLOWED'))
+
+    def help_clearnumber(self):
+        return 'Stops blocking a given number.'
+
+    def do_listcalls(self, arg):
+        number = self._get_number(arg, create=False)
+        if not number:
+            return
+
+        print('Call records for %s %s:' % (number.area_code, number.number))
+
+        for record in CallEvent.objects.filter(number=number):
+            print('- at %s, %s' % (record.time.isoformat(), ('BLOCKED' if record.blocked else 'ALLOWED')))
+
+    def help_listcalls(self):
+        return 'Lists logged calls for a given number.'
+
+    def _get_number(self, number, create=True) -> Union[PhoneNumber, None]:
+        parsed = self._parse_number(number)
+        if not parsed:
+            return None
+
+        area_code, number = parsed
+        matching = None
+        try:
+            matching = PhoneNumber.objects.get(
+                area_code=area_code,
+                number=number
+            )
+            print('Number FOUND in phonebook.')
+        except PhoneNumber.DoesNotExist:
+            print('Number NOT FOUND in phonebook.')
+            if create:
+                print('Number ADDED to phonebook.')
+                matching = PhoneNumber(
+                    source=Source.predef_source(Source.USER),
+                    area_code=area_code,
+                    number=number,
+                    block=False,
+                    date_inserted=timezone.now()
+                )
+                matching.save()
+
+        return matching
+
+    def _parse_number(self, number):
+        match = self.NUMBER_REGEX.match(number)
+        if match is None:
+            print('Invalid number %s. Valid numbers have an area '
+                  'code followed by the number, e.g. 11 99992223.' % number)
+            return None
+        return match.groups()

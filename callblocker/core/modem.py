@@ -11,32 +11,36 @@ import serial_asyncio
 logger = logging.getLogger(__name__)
 
 
-class Token(object):
-    def __init__(self, token_type: str, contents: Union[None, str]):
-        self.token_type = token_type
+class ModemException(Exception):
+    pass
+
+
+class ModemEvent(object):
+    def __init__(self, event_type: str, contents: Optional[str]):
+        self.event_type = event_type
         self.contents = contents
 
     def __eq__(self, other):
-        if not isinstance(other, Token):
+        if not isinstance(other, ModemEvent):
             return False
 
-        return (self.token_type == other.token_type and
+        return (self.event_type == other.event_type and
                 self.contents == other.contents)
 
     def __hash__(self):
-        return (self.token_type + self.contents).__hash__()
+        return (self.event_type + self.contents).__hash__()
 
     def __repr__(self):
-        return 'Token(%s, %s)' % (self.token_type, self.contents)
+        return 'ModemEvent(%s, %s)' % (self.event_type, self.contents)
 
 
 TOKEN_TYPES = (
-    (r'($|[\s]+$)', lambda _: Token('BLANK', None)),
-    (r'RING', lambda _: Token('RING', None)),
-    (r'OK', lambda _: Token('OK', None)),
-    (r'NMBR = ([0-9]+)', lambda match: Token('CALL_ID', match.group(1))),
-    (r'AT[\S]+', lambda match: Token('AT_COMMAND', match.group(0))),
-    (r'.*', lambda match: Token('UNKNOWN', match.group(0)))
+    (r'($|[\s]+$)', lambda _: ModemEvent('BLANK', None)),
+    (r'RING', lambda _: ModemEvent('RING', None)),
+    (r'OK', lambda _: ModemEvent('OK', None)),
+    (r'NMBR = ([0-9]+)', lambda match: ModemEvent('CALL_ID', match.group(1))),
+    (r'AT[\S]+', lambda match: ModemEvent('AT_COMMAND', match.group(0))),
+    (r'.*', lambda match: ModemEvent('UNKNOWN', match.group(0)))
 )
 
 
@@ -61,12 +65,12 @@ CX930xx = ModemType(
     newline=b'\r',
     command_timeout=2,
     commands={
-        'init': [
+        ModemType.INIT: [
             'ATE0',
             'ATZ',
             'AT+VCID=1'
         ],
-        'drop_call': [
+        ModemType.DROP_CALL: [
             'ATH1',
             '#PAUSE',
             '#PAUSE',
@@ -145,14 +149,14 @@ class Modem(object):
             await self.async_command(command)
 
             events = stream.__aiter__()
-            response = await events.__anext__()
+            response = await asyncio.wait_for(events.__anext__(), timeout=self.modem_type.command_timeout)
 
             # Echo is on. Got to read an extra line.
             if response.contents == command:
-                response = await events.__anext__()
+                response = await asyncio.wait_for(events.__anext__(), timeout=self.modem_type.command_timeout)
 
-            if response.token_type != 'OK':
-                raise Exception('Bad response while running %s: %s' % (command, response.contents))
+            if response.event_type != 'OK':
+                raise ModemException('Bad response while running %s: %s' % (command, response.contents))
 
     async def async_command(self, command: str) -> None:
         """ Asynchronously sends a command to the modem, returning without waiting for
@@ -213,9 +217,9 @@ class Modem(object):
             self.close()
             raise ex
 
-    async def _read_event(self, discard=None) -> Union[Token, None]:
+    async def _read_event(self, discard=None) -> Union[ModemEvent, None]:
         """
-        Reads a line from the modem input and analyses it as a :class:`~Token`. The call will return None
+        Reads a line from the modem input and analyses it as a :class:`~ModemEvent`. The call will return None
          immediately if there is nothing to read. Otherwise, it will attempt to read a complete line from
          the underlying :class:`SerialDevice`.
 
@@ -225,7 +229,7 @@ class Modem(object):
         :param discard:
             does not parse lines matching this string (useful for when echo is on).
 
-        :return: a :class:`~Token`.
+        :return: a :class:`~ModemEvent`.
         :raise StopIteration: if there is nothing to read.
         """
         # We have a crude, hardwired tokenizer here. If needed, this can become as
@@ -243,17 +247,18 @@ class Modem(object):
             if discard and discard == line:
                 continue
             token = self._match_token(line)
-            if token.token_type != 'BLANK':
+            if token.event_type != 'BLANK':
                 # Returns the first non-blank token.
                 return token
 
-    def _match_token(self, line) -> Token:
+    def _match_token(self, line) -> ModemEvent:
         for expression, token_type in TOKEN_TYPES:
             match = re.match(expression, line)
             if not match:
                 continue
             return token_type(match)
 
+        # Client is not expected to recover from this.
         raise Exception('Unmatched token %s' % line)
 
     def __enter__(self):
@@ -266,7 +271,7 @@ class Modem(object):
 class EventStream(object):
     def __init__(self, parent: Modem):
         self.parent = parent
-        self.has_events = Event()
+        self.has_events = Event(loop=parent._loop)
         self.events = deque()
         self._aiter = self._stream()
         self.ex = None
@@ -308,7 +313,7 @@ class EventStream(object):
             self.has_events.clear()
             await self.has_events.wait()
 
-    def event_received(self, event: Token):
+    def event_received(self, event: ModemEvent):
         self.events.append(event)
         self.has_events.set()
 

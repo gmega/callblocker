@@ -1,18 +1,25 @@
 import asyncio
+import textwrap
 
-from callblocker.blocker.modem import Token, CX930xx, Modem
-from callblocker.blocker.tests.fakeserial import CX930xx_fake
-from callblocker.blocker.tests.utils import read_data
+from callblocker.core.modem import ModemEvent, Modem
+from callblocker.core.tests.fakeserial import CX930xx_fake
 
 
 def test_parses_events(fake_serial):
-    loop = asyncio.get_event_loop()
-    fake_serial.after(seconds=0).output(read_data('call.txt').decode('ASCII'))
+    fake_serial.after(seconds=0).output(textwrap.dedent("""
+    
+    RING
 
+    NMBR = 111992659393
+
+    RING
+    """))
+
+    loop = asyncio.get_event_loop()
     expected = [
-        Token('RING', None),
-        Token('CALL_ID', '111992659393'),
-        Token('RING', None)
+        ModemEvent('RING', None),
+        ModemEvent('CALL_ID', '111992659393'),
+        ModemEvent('RING', None)
     ]
 
     modem = Modem(modem_type=CX930xx_fake, device_factory=fake_serial, loop=loop)

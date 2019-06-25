@@ -1,10 +1,11 @@
 import abc
 import logging
 from abc import abstractmethod
-from datetime import datetime
+
+from django.utils import timezone
 
 from callblocker.blocker.models import PhoneNumber, CallEvent, Source
-from callblocker.blocker.modem import Modem, ModemType, Token
+from callblocker.core.modem import Modem, ModemType, ModemEvent
 
 logger = logging.getLogger(__name__)
 
@@ -37,34 +38,37 @@ class CallMonitor(object):
             async for event in stream:
                 await self._process_event(event)
 
-    async def _process_event(self, event: Token):
+    async def _process_event(self, event: ModemEvent):
         # We only care about call ids. It's easier.
-        if event.token_type != 'CALL_ID':
+        if event.event_type != 'CALL_ID':
             logger.info('Discarding uninteresting modem event %s' % str(event))
             return
 
         # Parses the phone number.
         number = self.provider.parse_cid(event.contents)
+        logger.info('Got call from number %s ' % str(number))
 
         # Looks for blacklisted counterpart:
         try:
+            logger.info('Number %s was found in the phonebook.' % str(number))
             matching = PhoneNumber.objects.get(
                 number__endswith=number.number,
                 area_code=number.area_code
             )
         except PhoneNumber.objects.model.DoesNotExist:
+            logger.info('Number %s is a new number.' % str(number))
             matching = number
             number.save()
 
         # Logs the call.
         CallEvent(
             number=matching,
-            time=datetime.now(),
+            time=timezone.now(),
             blocked=matching.block
         ).save()
 
         # Number is blacklisted. Hangs up!
         if matching.block:
             logger.info(
-                'Dropping call for number %s.' % str(matching))
+                'Dropping call for BLOCKED number %s.' % str(matching))
             await self.modem.run_command_set(ModemType.DROP_CALL)

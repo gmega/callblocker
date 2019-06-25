@@ -17,6 +17,10 @@ LOGGING = {
         'handlers': ['console'],
         'level': 'DEBUG'
     },
+    'callblocker.core': {
+        'handlers': ['console'],
+        'level': 'DEBUG',
+    },
     'django.db.backends': {
         'handlers': ['console'],
         'level': 'DEBUG'

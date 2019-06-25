@@ -21,6 +21,7 @@ class PhoneNumber(models.Model):
     area_code = models.CharField(max_length=2)
     number = models.CharField(max_length=9)
     block = models.BooleanField()
+    date_inserted = models.DateTimeField()
 
 
 class CallEvent(models.Model):

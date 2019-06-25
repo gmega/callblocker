@@ -1,7 +1,7 @@
 import pytest
 from django.core.management import call_command
 
-from callblocker.blocker.tests.fakeserial import FakeSerial
+from callblocker.core.tests.fakeserial import FakeSerial
 
 
 @pytest.fixture
