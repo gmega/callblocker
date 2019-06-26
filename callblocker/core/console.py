@@ -22,18 +22,17 @@ class BaseModemConsole(Cmd):
     def __init__(self, stdout, device: str, baud_rate: int):
         super().__init__(stdout=stdout)
         self.loop = asyncio.new_event_loop()
-        self.loop_thread = Thread(target=lambda: self.loop.run_forever())
+        self.loop_thread = Thread(name='asyncio event loop', target=lambda: self.loop.run_forever())
         self.loop_thread.daemon = True
         self.loop_thread.start()
 
         self.modem = Modem(CX930xx, PySerialDevice(device, baud_rate), self.loop)
         self.stream = self.modem.event_stream()
 
-        asyncio.run_coroutine_threadsafe(self.modem.loop(), self.loop)
-        asyncio.run_coroutine_threadsafe(self._monitor_loop(), self.loop)
+        asyncio.run_coroutine_threadsafe(self.modem.loop(), self.loop).add_done_callback(self._loop_done)
+        asyncio.run_coroutine_threadsafe(self._monitor_loop(), self.loop).add_done_callback(self._loop_done)
 
     def do_exit(self, _):
-        self.loop.stop()
         return True
 
     def help_exit(self):
@@ -50,6 +49,13 @@ class BaseModemConsole(Cmd):
                     print('Modem: %s' % event)
         except CancelledError:
             pass
+
+    def _loop_done(self, future):
+        exc = future.exception(timeout=1)
+        if exc:
+            print('Modem monitoring loop died with an exception:\n\n %s \n\nExecution aborted.' % str(exc))
+            # This seems to be the cleanest way to abort a Cmd loop running from Django.
+            self.cmdqueue.append('exit')
 
 
 class ModemConsole(BaseModemConsole):

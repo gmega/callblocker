@@ -4,7 +4,7 @@ from abc import abstractmethod
 
 from django.utils import timezone
 
-from callblocker.blocker.models import PhoneNumber, CallEvent, Source
+from callblocker.blocker.models import Caller, Call, Source
 from callblocker.core.modem import Modem, ModemType, ModemEvent
 
 logger = logging.getLogger(__name__)
@@ -13,13 +13,13 @@ logger = logging.getLogger(__name__)
 class Provider(abc.ABC):
 
     @abstractmethod
-    def parse_cid(self, string: str) -> PhoneNumber:
+    def parse_cid(self, string: str) -> Caller:
         pass
 
 
 class Vivo(Provider):
-    def parse_cid(self, cid_string: str) -> PhoneNumber:
-        return PhoneNumber(
+    def parse_cid(self, cid_string: str) -> Caller:
+        return Caller(
             number=cid_string[-9:],
             area_code=cid_string[-11:-9],
             source=Source.predef_source(Source.CID),
@@ -51,18 +51,19 @@ class CallMonitor(object):
         # Looks for blacklisted counterpart:
         try:
             logger.info('Number %s was found in the phonebook.' % str(number))
-            matching = PhoneNumber.objects.get(
+            matching = Caller.objects.get(
                 number__endswith=number.number,
                 area_code=number.area_code
             )
-        except PhoneNumber.objects.model.DoesNotExist:
+        except Caller.objects.model.DoesNotExist:
             logger.info('Number %s is a new number.' % str(number))
             matching = number
+            number.date_inserted = timezone.now()
             number.save()
 
         # Logs the call.
-        CallEvent(
-            number=matching,
+        Call(
+            caller=matching,
             time=timezone.now(),
             blocked=matching.block
         ).save()
@@ -72,3 +73,5 @@ class CallMonitor(object):
             logger.info(
                 'Dropping call for BLOCKED number %s.' % str(matching))
             await self.modem.run_command_set(ModemType.DROP_CALL)
+        else:
+            logger.info('Call from %s ALLOWED.' % str(matching))

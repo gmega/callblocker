@@ -7,7 +7,7 @@ from django.core.management import BaseCommand
 from django.utils import timezone
 
 from callblocker.blocker.callmonitor import CallMonitor, Vivo
-from callblocker.blocker.models import PhoneNumber, Source, CallEvent
+from callblocker.blocker.models import Caller, Source, Call
 from callblocker.core.console import BaseModemConsole
 from callblocker.core.modem import ModemType
 
@@ -29,12 +29,12 @@ class Console(BaseModemConsole):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Initializes the modem.
+        asyncio.run_coroutine_threadsafe(self.modem.run_command_set(ModemType.INIT), self.loop).result()
+
         # Starts the call monitor.
         self.blocker = CallMonitor(Vivo(), self.modem)
         asyncio.run_coroutine_threadsafe(self.blocker.loop(), self.loop)
-
-        # Initializes the modem.
-        asyncio.run_coroutine_threadsafe(self.modem.run_command_set(ModemType.INIT), self.loop).result()
 
     def do_blocknumber(self, arg):
         number = self._get_number(arg)
@@ -71,13 +71,13 @@ class Console(BaseModemConsole):
 
         print('Call records for %s %s:' % (number.area_code, number.number))
 
-        for record in CallEvent.objects.filter(number=number):
+        for record in Call.objects.filter(caller=number):
             print('- at %s, %s' % (record.time.isoformat(), ('BLOCKED' if record.blocked else 'ALLOWED')))
 
     def help_listcalls(self):
         return 'Lists logged calls for a given number.'
 
-    def _get_number(self, number, create=True) -> Union[PhoneNumber, None]:
+    def _get_number(self, number, create=True) -> Union[Caller, None]:
         parsed = self._parse_number(number)
         if not parsed:
             return None
@@ -85,16 +85,16 @@ class Console(BaseModemConsole):
         area_code, number = parsed
         matching = None
         try:
-            matching = PhoneNumber.objects.get(
+            matching = Caller.objects.get(
                 area_code=area_code,
                 number=number
             )
             print('Number FOUND in phonebook.')
-        except PhoneNumber.DoesNotExist:
+        except Caller.DoesNotExist:
             print('Number NOT FOUND in phonebook.')
             if create:
                 print('Number ADDED to phonebook.')
-                matching = PhoneNumber(
+                matching = Caller(
                     source=Source.predef_source(Source.USER),
                     area_code=area_code,
                     number=number,

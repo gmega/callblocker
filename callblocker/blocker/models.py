@@ -13,18 +13,25 @@ class Source(models.Model):
         return Source.objects.get(pk=pk)
 
 
-class PhoneNumber(models.Model):
+class Caller(models.Model):
     class Meta:
         unique_together = (('area_code', 'number'),)
 
-    source = models.ForeignKey(Source, on_delete=models.PROTECT)
     area_code = models.CharField(max_length=2)
     number = models.CharField(max_length=9)
-    block = models.BooleanField()
     date_inserted = models.DateTimeField()
 
+    block = models.BooleanField()
 
-class CallEvent(models.Model):
-    number = models.ForeignKey(PhoneNumber, on_delete=models.CASCADE)
+    source = models.ForeignKey(Source, on_delete=models.PROTECT)
+    description = models.CharField(max_length=200)
+    notes = models.TextField()
+
+    def __str__(self):
+        return '(%s) %s' % (self.area_code, self.number)
+
+
+class Call(models.Model):
+    caller = models.ForeignKey(Caller, on_delete=models.CASCADE)
     time = models.DateTimeField()
     blocked = models.BooleanField()

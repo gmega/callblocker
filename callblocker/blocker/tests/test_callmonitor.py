@@ -2,9 +2,10 @@ import asyncio
 import textwrap
 
 import pytest
+from django.utils import timezone
 
 from callblocker.blocker.callmonitor import CallMonitor, Vivo
-from callblocker.blocker.models import PhoneNumber, CallEvent, Source
+from callblocker.blocker.models import Caller, Call, Source
 from callblocker.core.modem import Modem
 from callblocker.core.tests.fakeserial import CX930xx_fake
 
@@ -44,22 +45,23 @@ def test_register_calls(fake_serial):
 
     loop.run_until_complete(event.wait())
 
-    numbers = {x.number for x in PhoneNumber.objects.all()}
+    numbers = {x.number for x in Caller.objects.all()}
     assert numbers == {'992223451', '992223452'}
 
-    events = [event for event in CallEvent.objects.all().order_by('time')]
-    assert [event.number.number for event in events] == ['992223451', '992223451', '992223452']
+    events = [event for event in Call.objects.all().order_by('time')]
+    assert [event.caller.number for event in events] == ['992223451', '992223451', '992223452']
     assert not any(event.blocked for event in events)
 
 
 @pytest.mark.django_db(transaction=True)
 def test_blocks_calls(fake_serial):
     # Blacklisted number.
-    blacklisted = PhoneNumber(
+    blacklisted = Caller(
         source=Source.predef_source(Source.CID),
         area_code='11',
         number='992345678',
-        block=True
+        block=True,
+        date_inserted=timezone.now()
     )
 
     blacklisted.save()
@@ -93,8 +95,8 @@ def test_blocks_calls(fake_serial):
     loop.run_until_complete(last.wait())
 
     # Checks that the call has been logged
-    event = CallEvent.objects.get(
-        number=blacklisted
+    event = Call.objects.get(
+        caller=blacklisted
     )
 
     assert event.blocked
