@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 
 from callblocker.blocker.api import views
+from callblocker.blocker.utils import bootstrap_callmonitor
 
 urlpatterns = [
     url(
@@ -25,5 +26,9 @@ urlpatterns = [
         view=views.CallerList.as_view(),
         name='callblocker_api'
     ),
+    path('api/status/', views.health_status),
     path('admin/', admin.site.urls)
 ]
+
+# Oh, Django... why do you make me do this?
+bootstrap_callmonitor()

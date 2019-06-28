@@ -6,10 +6,9 @@ from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils import timezone
 
-from callblocker.blocker.callmonitor import CallMonitor, Vivo
 from callblocker.blocker.models import Caller, Source, Call
+from callblocker.blocker.utils import bootstrap_callmonitor
 from callblocker.core.console import BaseModemConsole
-from callblocker.core.modem import ModemType
 
 
 class Command(BaseCommand):
@@ -29,12 +28,8 @@ class Console(BaseModemConsole):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Initializes the modem.
-        asyncio.run_coroutine_threadsafe(self.modem.run_command_set(ModemType.INIT), self.loop).result()
-
         # Starts the call monitor.
-        self.blocker = CallMonitor(Vivo(), self.modem)
-        asyncio.run_coroutine_threadsafe(self.blocker.loop(), self.loop)
+        self.blocker = bootstrap_callmonitor(self.modem)
 
     def do_blocknumber(self, arg):
         number = self._get_number(arg)

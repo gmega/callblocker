@@ -1,3 +1,8 @@
+from os import environ
+
+from .base import *
+
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -9,5 +14,16 @@ LOGGING = {
     'root': {
         'handlers': ['console'],
         'level': 'INFO'
+    }
+}
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': environ['DB_NAME'],
+        'USER': environ['DB_USER'],
+        'PASSWORD': environ['DB_PASSWORD'],
+        'HOST': environ['DB_HOST'],
+        'PORT': environ['DB_PORT']
     }
 }

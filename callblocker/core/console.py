@@ -7,9 +7,9 @@ import asyncio
 import sys
 from asyncio import CancelledError
 from cmd import Cmd
-from threading import Thread
 
-from callblocker.core.modem import Modem, CX930xx, PySerialDevice, ModemException, ModemEvent
+from callblocker.core import healthmonitor
+from callblocker.core.modem import Modem, CX930xx, PySerialDevice, ModemException, ModemEvent, bootstrap_modem
 
 
 class BaseModemConsole(Cmd):
@@ -21,16 +21,13 @@ class BaseModemConsole(Cmd):
 
     def __init__(self, stdout, device: str, baud_rate: int):
         super().__init__(stdout=stdout)
-        self.loop = asyncio.new_event_loop()
-        self.loop_thread = Thread(name='asyncio event loop', target=lambda: self.loop.run_forever())
-        self.loop_thread.daemon = True
-        self.loop_thread.start()
 
-        self.modem = Modem(CX930xx, PySerialDevice(device, baud_rate), self.loop)
+        supervisor = healthmonitor.monitor()
+        self.modem = Modem(CX930xx, PySerialDevice(device, baud_rate))
+        self.aio_loop, _ = bootstrap_modem(self.modem, supervisor)
+
         self.stream = self.modem.event_stream()
-
-        asyncio.run_coroutine_threadsafe(self.modem.loop(), self.loop).add_done_callback(self._loop_done)
-        asyncio.run_coroutine_threadsafe(self._monitor_loop(), self.loop).add_done_callback(self._loop_done)
+        supervisor.run_coroutine_threadsafe(self.loop(), 'console event loop', self.aio_loop, self._handle_loop_death)
 
     def do_exit(self, _):
         return True
@@ -42,7 +39,7 @@ class BaseModemConsole(Cmd):
         # Subclasses should implement this.
         raise NotImplementedError()
 
-    async def _monitor_loop(self):
+    async def loop(self):
         try:
             with self.stream as stream:
                 async for event in stream:
@@ -50,7 +47,7 @@ class BaseModemConsole(Cmd):
         except CancelledError:
             pass
 
-    def _loop_done(self, future):
+    def _handle_loop_death(self, future):
         exc = future.exception(timeout=1)
         if exc:
             print('Modem monitoring loop died with an exception:\n\n %s \n\nExecution aborted.' % str(exc))
@@ -75,11 +72,11 @@ class ModemConsole(BaseModemConsole):
             return
 
         if arg not in self.modem.modem_type.COMMANDS:
-            print('Invalid command: %s. See "commands" for valid commands.' % arg)
+            print('Invalid command: %s. See "lscommand" for valid commands.' % arg)
             return
 
         try:
-            asyncio.run_coroutine_threadsafe(self.modem.run_command_set(arg), self.loop).result()
+            asyncio.run_coroutine_threadsafe(self.modem.run_command_set(arg), self.aio_loop).result()
         except asyncio.TimeoutError:
             print('Failed to run command set %s. No reply from modem.' % arg)
 
@@ -91,7 +88,7 @@ class ModemConsole(BaseModemConsole):
             print('Please input a proper AT command for the modem (e.g ATZ).')
 
         try:
-            asyncio.run_coroutine_threadsafe(self.modem.sync_command(arg), self.loop).result()
+            asyncio.run_coroutine_threadsafe(self.modem.sync_command(arg), self.aio_loop).result()
         except asyncio.TimeoutError:
             print('No reply from modem. Invalid command?')
         except ModemException as ex:

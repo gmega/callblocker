@@ -1,11 +1,14 @@
 from typing import Dict, Any
 
 from django.db.models import Count
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
 
 from callblocker.blocker.api.serializers import CallerSerializer
 from callblocker.blocker.models import Caller
+from callblocker.core.healthmonitor import monitor
 
 
 class CallerList(ListAPIView):
@@ -34,3 +37,8 @@ class CallerList(ListAPIView):
                                          ','.join(CallerList.ALLOWED_ORDERINGS))
 
         return params
+
+
+@api_view(['GET'])
+def health_status(request):
+    return Response(monitor().health())

@@ -2,11 +2,14 @@ import asyncio
 import logging
 import re
 from abc import ABC, abstractmethod
-from asyncio import Event, StreamWriter, StreamReader
+from asyncio import Event, StreamWriter, StreamReader, AbstractEventLoop
 from collections import deque
+from threading import Thread
 from typing import Union, List, Dict, Tuple, Optional
 
 import serial_asyncio
+
+from callblocker.core.healthmonitor import TaskMonitor
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +107,7 @@ class Modem(object):
         self.device_factory = device_factory
         self.modem_type = modem_type
 
-        self._loop = asyncio.get_event_loop() if loop is None else loop
+        self.aio_loop = asyncio.get_event_loop() if loop is None else loop
         self._reader: Optional[StreamReader] = None
         self._writer: Optional[StreamWriter] = None
         self.streams = []
@@ -127,7 +130,7 @@ class Modem(object):
         for command in self.modem_type.commands[command_set]:
             # Again, somewhat crude parsing of special commands.
             if command == '#PAUSE':
-                await asyncio.sleep(1, loop=self._loop)
+                await asyncio.sleep(1, loop=self.aio_loop)
                 continue
 
             await self.sync_command(command)
@@ -202,7 +205,7 @@ class Modem(object):
         self._ensure_running()
 
         if self._pending is None:
-            self._pending = self._loop.create_future()
+            self._pending = self.aio_loop.create_future()
 
         return self._pending
 
@@ -212,7 +215,7 @@ class Modem(object):
 
     async def _connect(self) -> None:
         try:
-            self._reader, self._writer = await self.device_factory.connect(loop=self._loop)
+            self._reader, self._writer = await self.device_factory.connect(loop=self.aio_loop)
         except Exception as ex:
             self.close()
             raise ex
@@ -271,7 +274,7 @@ class Modem(object):
 class EventStream(object):
     def __init__(self, parent: Modem):
         self.parent = parent
-        self.has_events = Event(loop=parent._loop)
+        self.has_events = Event(loop=parent.aio_loop)
         self.events = deque()
         self._aiter = self._stream()
         self.ex = None
@@ -320,3 +323,32 @@ class EventStream(object):
     def exception(self, ex):
         self.ex = ex
         self.has_events.set()
+
+
+def bootstrap_modem(modem: Modem, supervisor: TaskMonitor) -> Tuple[AbstractEventLoop, Thread]:
+    """
+    Utility method for bootstrapping the modem's event loop to run in a separate thread
+    and with :class:`TaskMonitor` monitoring and initializing the modem. This somewhat
+    ad hoc procedure is done here because it is required in multiple places.
+
+    :param modem: The :class:`Modem` instance to bootstrap.
+    :param supervisor: a :class:`TaskMonitor` instance which will supervise threads
+        and coroutines.
+
+    :return: a tuple containing the newly-created :class:`AbstractEventLoop`and the
+            :class:`Thread` it is running in.
+    """
+    # Starts the asyncio loop.
+    print('bootstrap modem')
+    aio_loop = asyncio.new_event_loop()
+    loop_thread = supervisor.thread('asyncio event loop', target=aio_loop.run_forever, daemon=True)
+    loop_thread.start()
+
+    # Starts the monitoring loops.
+    modem.aio_loop = aio_loop
+    supervisor.run_coroutine_threadsafe(modem.loop(), 'modem event loop', aio_loop)
+
+    # Synchronously initializes the modem.
+    asyncio.run_coroutine_threadsafe(modem.run_command_set(ModemType.INIT), loop=aio_loop).result()
+
+    return aio_loop, loop_thread

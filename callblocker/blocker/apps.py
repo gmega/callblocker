@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class ModemConfig(AppConfig):
-    name = 'modem'
+class BlockerConfig(AppConfig):
+    name = 'blocker'

@@ -1,0 +1,31 @@
+version: '3'
+services:
+  postgres:
+    restart: always
+    image: postgres:alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=blocker_user
+      - POSTGRES_PASSWORD=blocker
+      - POSTGRES_DB=blocker
+
+  callblocker-seed:
+    image: callblocker:latest
+    command: ['/callblocker/seed-db.sh']
+    depends_on:
+      - 'postgres'
+
+  callblocker:
+    restart: always
+    image: callblocker:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_NAME=blocker
+      - DB_USER=blocker_user
+      - DB_PASSWORD=blocker
+      - DB_HOST=postgres
+      - DB_PORT=5432
+    depends_on:
+      - 'callblocker-seed'
