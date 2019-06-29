@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 
 from callblocker.blocker.api import views
-from callblocker.blocker.utils import bootstrap_callmonitor
+from callblocker.blocker.bootstrap import bootstrap_callmonitor
 
 urlpatterns = [
     url(

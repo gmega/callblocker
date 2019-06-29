@@ -339,7 +339,6 @@ def bootstrap_modem(modem: Modem, supervisor: TaskMonitor) -> Tuple[AbstractEven
             :class:`Thread` it is running in.
     """
     # Starts the asyncio loop.
-    print('bootstrap modem')
     aio_loop = asyncio.new_event_loop()
     loop_thread = supervisor.thread('asyncio event loop', target=aio_loop.run_forever, daemon=True)
     loop_thread.start()

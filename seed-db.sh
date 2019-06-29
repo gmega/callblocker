@@ -1,12 +1,21 @@
 #!/bin/sh
-cd /callblocker
+#
+# Seeds the database with the base data required for Callblocker to function.
 
-if [[ -e seeded ]]; then
+cd ${APP_FOLDER}
+
+if [[ -e seed-mark ]]; then
     echo "Database already seeded."
     exit 0
 fi
 
+echo "Applying migrations."
+
+python ./manage.py migrate
+
 echo "Seeding database."
 
-touch seed-mark
 python ./manage.py loaddata ./callblocker/blocker/fixtures/initial.yaml
+
+# On success, create marker.
+touch seed-mark

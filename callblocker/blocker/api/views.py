@@ -3,7 +3,7 @@ from typing import Dict, Any
 from django.db.models import Count
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import ValidationError
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListCreateAPIView
 from rest_framework.response import Response
 
 from callblocker.blocker.api.serializers import CallerSerializer
@@ -11,7 +11,7 @@ from callblocker.blocker.models import Caller
 from callblocker.core.healthmonitor import monitor
 
 
-class CallerList(ListAPIView):
+class CallerList(ListCreateAPIView):
     ALLOWED_ORDERINGS = frozenset(['calls', 'date_inserted'])
     DEFAULT_ORDERING = 'calls'
 

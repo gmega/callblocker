@@ -1,5 +1,7 @@
 from django.core.management.commands import runserver
 
+from callblocker import blocker
+
 
 class Command(runserver.Command):
     """
@@ -11,5 +13,7 @@ class Command(runserver.Command):
 
     def handle(self, *args, **options):
         options['use_reloader'] = False
+        # Sigh.
+        blocker.enable()
         # Runs the actual server.
         super().handle(*args, **options)

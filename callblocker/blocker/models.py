@@ -19,13 +19,13 @@ class Caller(models.Model):
 
     area_code = models.CharField(max_length=2)
     number = models.CharField(max_length=9)
-    date_inserted = models.DateTimeField()
+    date_inserted = models.DateTimeField(auto_now_add=True)
 
-    block = models.BooleanField()
+    block = models.BooleanField(default=False)
 
     source = models.ForeignKey(Source, on_delete=models.PROTECT)
-    description = models.CharField(max_length=200)
-    notes = models.TextField()
+    description = models.CharField(max_length=200, default='')
+    notes = models.TextField(default='')
 
     def __str__(self):
         return '(%s) %s' % (self.area_code, self.number)

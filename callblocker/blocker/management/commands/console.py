@@ -6,8 +6,9 @@ from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils import timezone
 
+from callblocker.blocker import bootstrap
 from callblocker.blocker.models import Caller, Source, Call
-from callblocker.blocker.utils import bootstrap_callmonitor
+from callblocker.blocker.bootstrap import bootstrap_callmonitor
 from callblocker.core.console import BaseModemConsole
 
 
@@ -15,6 +16,7 @@ class Command(BaseCommand):
     help = 'Starts the call monitor console app.'
 
     def handle(self, *args, **options):
+        bootstrap.enable_modem_monitoring()
         Console(
             stdout=self.stdout,
             device=settings.MODEM_DEVICE,

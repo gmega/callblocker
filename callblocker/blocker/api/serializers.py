@@ -24,8 +24,7 @@ class SourceSerializer(ModelSerializer):
 
 
 class CallerSerializer(ModelSerializer):
-    calls = serializers.IntegerField()
-    source = SourceSerializer(read_only=True)
+    calls = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Caller
