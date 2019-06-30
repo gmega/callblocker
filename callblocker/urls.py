@@ -15,20 +15,25 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import SimpleRouter
 
+from callblocker.blocker import bootstrap
 from callblocker.blocker.api import views
-from callblocker.blocker.bootstrap import bootstrap_callmonitor
+from callblocker.blocker.api.views import CallerViewSet
+
+router = SimpleRouter()
+router.register(
+    r'callers',
+    CallerViewSet,
+    base_name='caller'
+)
 
 urlpatterns = [
-    url(
-        regex=r'^api/callers/$',
-        view=views.CallerList.as_view(),
-        name='callblocker_api'
-    ),
+    url(r'^api/', include(router.urls)),
     path('api/status/', views.health_status),
     path('admin/', admin.site.urls)
 ]
 
 # Oh, Django... why do you make me do this?
-bootstrap_callmonitor()
+bootstrap.bootstrap_callmonitor()

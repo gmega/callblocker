@@ -24,6 +24,8 @@ class SourceSerializer(ModelSerializer):
 
 
 class CallerSerializer(ModelSerializer):
+    area_code = serializers.CharField(read_only=True)
+    number = serializers.CharField(read_only=True)
     calls = serializers.IntegerField(read_only=True)
 
     class Meta:
