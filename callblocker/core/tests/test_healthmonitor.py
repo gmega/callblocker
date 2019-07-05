@@ -1,11 +1,11 @@
 import asyncio
 from threading import Thread
 
-from callblocker.core.healthmonitor import TaskMonitor
+from callblocker.core.healthmonitor import HealthMonitor
 
 
 def test_notifies_thread_death():
-    mon = TaskMonitor()
+    mon = HealthMonitor()
 
     def bad_code():
         raise Exception('Oops, I am dead!')
@@ -37,7 +37,7 @@ def test_notifies_thread_death():
 
 
 def test_notifies_coroutine_death():
-    mon = TaskMonitor()
+    mon = HealthMonitor()
     loop = asyncio.new_event_loop()
 
     async def bad_code():

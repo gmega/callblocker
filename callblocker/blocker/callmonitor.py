@@ -2,6 +2,7 @@ import abc
 import logging
 from abc import abstractmethod
 
+from django.db import transaction
 from django.utils import timezone
 
 from callblocker.blocker.models import Caller, Call, Source
@@ -59,14 +60,20 @@ class CallMonitor(object):
             logger.info('Number %s is a new number.' % str(number))
             matching = number
             number.date_inserted = timezone.now()
-            number.save()
 
-        # Logs the call.
-        Call(
-            caller=matching,
-            time=timezone.now(),
-            blocked=matching.block
-        ).save()
+        now = timezone.now()
+
+        with transaction.atomic():
+            # Updates last called.
+            matching.last_call = now
+            matching.save()
+
+            # Logs the call.
+            Call(
+                caller=matching,
+                time=now,
+                blocked=matching.block
+            ).save()
 
         # Number is blacklisted. Hangs up!
         if matching.block:

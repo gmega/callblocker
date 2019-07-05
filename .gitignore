@@ -1,3 +1,5 @@
 *pytest_cache
 *pyc
 .idea
+
+/node_modules

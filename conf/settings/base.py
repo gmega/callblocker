@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-    'callblocker.blocker'
+    'callblocker.blocker',
+    'callblocker.frontend'
 ]
 
 MIDDLEWARE = [

@@ -14,18 +14,27 @@ class Source(models.Model):
 
 
 class Caller(models.Model):
-    class Meta:
-        unique_together = (('area_code', 'number'),)
+    # This may sound redundant but it's actually the best
+    # primary key for our callers. Further, many other
+    # pieces of the framework are not good at working with
+    # composite keys, so having a single primary key makes
+    # things much simpler.
+    full_number = models.CharField(max_length=28)
 
-    area_code = models.CharField(max_length=2)
-    number = models.CharField(max_length=9)
+    area_code = models.CharField(max_length=8)
+    number = models.CharField(max_length=20)
     date_inserted = models.DateTimeField(auto_now_add=True)
+    last_call = models.DateTimeField(auto_now_add=True)
 
     block = models.BooleanField(default=False)
 
     source = models.ForeignKey(Source, on_delete=models.PROTECT)
     description = models.CharField(max_length=200, default='')
     notes = models.TextField(default='')
+
+    def save(self, *args, **kwargs):
+        self.full_number = self.area_code.strip() + self.number.strip()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return '(%s) %s' % (self.area_code, self.number)

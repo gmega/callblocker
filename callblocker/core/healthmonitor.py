@@ -11,7 +11,12 @@ from typing import Union, Dict, Any
 logger = logging.getLogger(__name__)
 
 
-class TaskMonitor(object):
+class HealthMonitor(object):
+    """
+    :class:`HealthMoitor` wraps threads and coroutines so that we get proper notification
+    of their untimely death. This allows us to take action such as notifying the user that
+    the server is broken, or triggering an automatic server restart.
+    """
     def __init__(self):
         self.status = {}
 
@@ -97,8 +102,8 @@ class TaskStatus(object):
         return self.exception is None
 
 
-_monitor = TaskMonitor()
+_monitor = HealthMonitor()
 
 
-def monitor() -> TaskMonitor:
+def monitor() -> HealthMonitor:
     return _monitor

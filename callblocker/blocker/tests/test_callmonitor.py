@@ -45,15 +45,18 @@ def test_register_calls(fake_serial):
 
     loop.run_until_complete(event.wait())
 
-    numbers = {x.number for x in Caller.objects.all()}
-    assert numbers == {'992223451', '992223452'}
+    # We need this filter because the sample data loaded by the fixture contains a lot of stuff already.
+    reference = {'992223451', '992223452'}
 
-    events = [event for event in Call.objects.all().order_by('time')]
+    numbers = {x.number for x in Caller.objects.all() if x.number in reference}
+    assert numbers == reference
+
+    events = [event for event in Call.objects.all().order_by('time') if event.caller.number in reference]
     assert [event.caller.number for event in events] == ['992223451', '992223451', '992223452']
     assert not any(event.blocked for event in events)
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 def test_blocks_calls(fake_serial):
     # Blacklisted number.
     blacklisted = Caller(
@@ -67,7 +70,7 @@ def test_blocks_calls(fake_serial):
     blacklisted.save()
 
     fake_serial.script(textwrap.dedent(
-        """ 
+        """
         RING\n
         \n
         NMBR = 2111992345678

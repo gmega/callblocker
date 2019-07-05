@@ -9,7 +9,7 @@ from typing import Union, List, Dict, Tuple, Optional
 
 import serial_asyncio
 
-from callblocker.core.healthmonitor import TaskMonitor
+from callblocker.core.healthmonitor import HealthMonitor
 
 logger = logging.getLogger(__name__)
 
@@ -325,7 +325,7 @@ class EventStream(object):
         self.has_events.set()
 
 
-def bootstrap_modem(modem: Modem, supervisor: TaskMonitor) -> Tuple[AbstractEventLoop, Thread]:
+def bootstrap_modem(modem: Modem, supervisor: HealthMonitor) -> Tuple[AbstractEventLoop, Thread]:
     """
     Utility method for bootstrapping the modem's event loop to run in a separate thread
     and with :class:`TaskMonitor` monitoring and initializing the modem. This somewhat

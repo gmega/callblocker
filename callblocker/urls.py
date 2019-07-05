@@ -16,23 +16,24 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.routers import SimpleRouter
+from rest_framework_bulk.routes import BulkRouter
 
 from callblocker.blocker import bootstrap
-from callblocker.blocker.api import views
-from callblocker.blocker.api.views import CallerViewSet
+from callblocker.blocker.api import views as api_views
+from callblocker.frontend import views as frontend_views
 
-router = SimpleRouter()
-router.register(
+bulk_router = BulkRouter()
+bulk_router.register(
     r'callers',
-    CallerViewSet,
+    api_views.CallerViewSet,
     base_name='caller'
 )
 
 urlpatterns = [
-    url(r'^api/', include(router.urls)),
-    path('api/status/', views.health_status),
-    path('admin/', admin.site.urls)
+    url(r'^api/', include(bulk_router.urls)),
+    path('api/status/', api_views.health_status),
+    path('admin/', admin.site.urls),
+    path(r'frontend/', frontend_views.index)
 ]
 
 # Oh, Django... why do you make me do this?
