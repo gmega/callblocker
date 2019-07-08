@@ -3,8 +3,6 @@ services:
   postgres:
     restart: always
     image: postgres:alpine
-    ports:
-      - '5432:5432'
     environment:
       - POSTGRES_USER=blocker_user
       - POSTGRES_PASSWORD=blocker
@@ -12,8 +10,9 @@ services:
 
   callblocker-seed:
     image: callblocker:latest
-    command: ['/callblocker/seed-db.sh']
+    command: ['/callblocker/bin/seed-db.sh']
     environment:
+      - DJANGO_SETTINGS_MODULE=conf.settings.production.base
       - APP_FOLDER=/callblocker
       - DB_NAME=blocker
       - DB_USER=blocker_user
@@ -29,18 +28,20 @@ services:
     restart: always
     image: callblocker:latest
     ports:
-      - '5000:5000'
+      - '5000:${HOST_API_PORT:-5000}'
     environment:
+      - DJANGO_SETTINGS_MODULE=conf.settings.production.server
       - DB_NAME=blocker
       - DB_USER=blocker_user
       - DB_PASSWORD=blocker
       - DB_HOST=postgres
       - DB_PORT=5432
+      - HOST_API_ADDRESS=${HOST_API_ADDRESS:?HOST_API_ADDRESS is required}
+      - HOST_API_PORT=${HOST_API_PORT:-5000}
     depends_on:
       - 'callblocker-seed'
       - 'postgres'
     links:
       - postgres
-    # You may need to change this to something else.
     devices:
-      - '/dev/ttyACM0:/dev/ttyACM0'
+      - '${HOST_MODEM_DEVICE:?HOST_MODEM_DEVICE is required}:/dev/ttyACM0'

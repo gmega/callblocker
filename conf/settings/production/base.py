@@ -1,7 +1,4 @@
-from os import environ
-
-from .base import *
-
+from conf.settings.base import *
 
 LOGGING = {
     'version': 1,
@@ -27,3 +24,5 @@ DATABASES = {
         'PORT': environ['DB_PORT']
     }
 }
+
+DEBUG = True

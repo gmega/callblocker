@@ -1,0 +1,7 @@
+.git
+*pytest_cache
+*pyc
+.idea
+*__pycache__
+
+/node_modules
