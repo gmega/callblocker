@@ -5,31 +5,32 @@ from abc import abstractmethod
 from django.db import transaction
 from django.utils import timezone
 
-from callblocker.blocker.models import Caller, Call, Source
+from callblocker.blocker.models import Caller, Call
 from callblocker.core.modem import Modem, ModemType, ModemEvent
 
 logger = logging.getLogger(__name__)
 
 
-class Provider(abc.ABC):
+class CIDParseError(Exception):
+    pass
+
+
+class TelcoProvider(abc.ABC):
 
     @abstractmethod
     def parse_cid(self, string: str) -> Caller:
+        """
+        Parses a Caller ID (CID) string into a :class:`Caller` object.
+
+        :param string: a CID string.
+        :raise CIDParseError: if the CID string is not in accordance to this provider's rules.
+        :return: a :class:`Caller`.
+        """
         pass
 
 
-class Vivo(Provider):
-    def parse_cid(self, cid_string: str) -> Caller:
-        return Caller(
-            number=cid_string[-9:],
-            area_code=cid_string[-11:-9],
-            source=Source.predef_source(Source.CID),
-            block=False
-        )
-
-
 class CallMonitor(object):
-    def __init__(self, provider: Provider, modem: Modem):
+    def __init__(self, provider: TelcoProvider, modem: Modem):
         self.provider = provider
         self.modem = modem
         self.stream = modem.event_stream()

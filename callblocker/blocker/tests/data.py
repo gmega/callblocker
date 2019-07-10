@@ -1,6 +1,7 @@
 import random
 from datetime import timedelta, datetime
 
+import pytz
 from yaml import dump, Dumper
 
 NAMES = """
@@ -115,11 +116,14 @@ def integer_string(n):
     return ''.join([str(random.randint(0, 9)) for _ in range(0, n)])
 
 
-def gen_datetime(year):
+def gen_datetime(year, quoted=True):
     # generate a datetime in format yyyy-mm-dd hh:mm:ss.000000
     start = datetime(year, 1, 1, 00, 00, 00)
     end = start + timedelta(days=365)
-    return start + (end - start) * random.random()
+    dt = (start + (end - start) * random.random()).replace(tzinfo=pytz.utc)
+
+    # Quoting to work around https://code.djangoproject.com/ticket/18867
+    return dt.isoformat() if quoted else dt
 
 
 print(generate(NAMES, 15))

@@ -26,7 +26,7 @@ bulk_router = BulkRouter()
 bulk_router.register(
     r'callers',
     api_views.CallerViewSet,
-    base_name='caller'
+    basename='caller'
 )
 
 urlpatterns = [

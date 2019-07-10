@@ -1,7 +1,8 @@
 from django.conf import settings
 
 from callblocker.blocker import BOOTSTRAP_CALLMONITOR
-from callblocker.blocker.callmonitor import CallMonitor, Vivo
+from callblocker.blocker.callmonitor import CallMonitor
+from callblocker.blocker.telcos import Vivo
 from callblocker.core import healthmonitor
 from callblocker.core.modem import Modem, CX930xx, PySerialDevice, bootstrap_modem
 from callblocker.core.tests.fakeserial import ScriptedModem, CX930xx_fake

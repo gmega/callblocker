@@ -4,8 +4,9 @@ import textwrap
 import pytest
 from django.utils import timezone
 
-from callblocker.blocker.callmonitor import CallMonitor, Vivo
+from callblocker.blocker.callmonitor import CallMonitor
 from callblocker.blocker.models import Caller, Call, Source
+from callblocker.blocker.telcos import Vivo
 from callblocker.core.modem import Modem
 from callblocker.core.tests.fakeserial import CX930xx_fake
 
