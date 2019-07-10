@@ -2,12 +2,12 @@ import pytest
 from django.core.management import call_command
 from rest_framework.test import APIClient
 
-from callblocker.core.tests.fakeserial import FakeSerial
+from callblocker.core.tests.fakeserial import ScriptedModem
 
 
 @pytest.fixture
 def fake_serial():
-    serial = FakeSerial()
+    serial = ScriptedModem()
     yield serial
 
 

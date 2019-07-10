@@ -1,7 +1,12 @@
-.git
+# Standard Python ignores
 *pytest_cache
 *pyc
-.idea
 *__pycache__
 
+# Dev tools
+.git
+.idea
 /node_modules
+
+# Do not scoop in frontend bundles built locally
+/frontend/dist

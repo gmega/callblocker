@@ -9,7 +9,7 @@ class Command(BaseCommand):
     there is no sane way of detecting this here, so the only thing this does is to disable reloading, and enable
     the modem monitoring loop.
     """
-    help = 'Runs the callblocker server.'
+    help = 'Runs the Callblocker development server.'
 
     def execute(self, *args, **options):
         # Sigh. This has to be put here as otherwise BaseCommand

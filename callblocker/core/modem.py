@@ -85,7 +85,7 @@ CX930xx = ModemType(
 
 class SerialDeviceFactory(ABC):
     @abstractmethod
-    async def connect(self, loop) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+    async def connect(self, aio_loop) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:
         pass
 
 
@@ -94,8 +94,8 @@ class PySerialDevice(SerialDeviceFactory):
         self.port = port
         self.baud = baud
 
-    async def connect(self, loop):
-        return await serial_asyncio.open_serial_connection(loop=loop, url=self.port, baudrate=self.baud)
+    async def connect(self, aio_loop):
+        return await serial_asyncio.open_serial_connection(loop=aio_loop, url=self.port, baudrate=self.baud)
 
 
 class Modem(object):
@@ -215,7 +215,7 @@ class Modem(object):
 
     async def _connect(self) -> None:
         try:
-            self._reader, self._writer = await self.device_factory.connect(loop=self.aio_loop)
+            self._reader, self._writer = await self.device_factory.connect(aio_loop=self.aio_loop)
         except Exception as ex:
             self.close()
             raise ex

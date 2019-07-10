@@ -1,5 +1,11 @@
+# Standard Python ignores
 *pytest_cache
 *pyc
-.idea
 
+# Dev tools
+.idea
 /node_modules
+
+# Do not scoop in frontend bundles built locally
+/frontend/dist
+

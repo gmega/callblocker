@@ -12,13 +12,15 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 
-# Modem configuration.
+# Modem and telephone provider configuration.
 from os import environ
 
 MODEM_DEVICE = '/dev/ttyACM0'
 MODEM_BAUD = 115200
+MODEM_DEBUG = bool(environ.get('MODEM_USE_FAKE', 'False'))
+MODEM_USE_FAKE = bool(environ.get('MODEM_USE_FAKE', 'False'))
 
-SERVICE_PROVIDER = 'Vivo'
+MODEM_TELCO = 'Vivo'
 MODEM_TYPE = 'CX930xx'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -41,8 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-    'callblocker.blocker',
-    'callblocker.frontend'
+    'callblocker.blocker'
 ]
 
 MIDDLEWARE = [

@@ -1,5 +1,3 @@
-from os import environ
-
 from .base import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -41,3 +39,6 @@ DATABASES = {
         'PORT': '5432'
     }
 }
+
+MODEM_USE_FAKE = bool(environ.get('MODEM_USE_FAKE', 'True'))
+MODEM_DEBUG = True

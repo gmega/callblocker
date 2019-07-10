@@ -31,13 +31,13 @@ from shutil import copyfile
 
 
 def main(base, api_endpoint):
-    if not path.exists(path.join(base, 'main.js.orig')):
+    if not path.exists(path.join(base, 'index_bundle.js.orig')):
         print('Store client template.')
-        copyfile(path.join(base, 'main.js'), path.join(base, 'main.js.orig'))
+        copyfile(path.join(base, 'index_bundle.js'), path.join(base, 'index_bundle.js.orig'))
 
-    contents = open(path.join(base, 'main.js.orig'), encoding='utf-8').read()
+    contents = open(path.join(base, 'index_bundle.js.orig'), encoding='utf-8').read()
 
-    with open(path.join(base, 'main.js'), 'w', encoding='utf-8') as outfile:
+    with open(path.join(base, 'index_bundle.js'), 'w', encoding='utf-8') as outfile:
         print('API server is %s.' % api_endpoint)
         outfile.write(contents.replace('localhost:8000', api_endpoint))
 

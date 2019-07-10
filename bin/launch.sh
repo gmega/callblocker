@@ -4,7 +4,7 @@ set -e
 
 cd /callblocker
 
-python -m callblocker.misc.preprocess ./callblocker/frontend/static/frontend
+python -m callblocker.misc.preprocess ./frontend/dist
 
 echo "Start UWSGI."
 

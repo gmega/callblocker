@@ -1,12 +1,11 @@
 # ==== Webpack Build
 FROM node:12.5.0 as build
 
-# We keep this structure to avoid having to change the webpack build. This
-# callblocker/callblocker is just how Django likes things organized.
-RUN mkdir -p /callblocker/callblocker/frontend
-RUN mkdir -p /callblocker/callblocker/frontend/static/frontend
+# We copy only the JS code to avoid needlessly running this stage for
+# backend changes.
+RUN mkdir -p /callblocker/frontend
 
-COPY ./callblocker/frontend/src /callblocker/callblocker/frontend/src
+COPY ./frontend/ /callblocker/frontend/
 COPY package.json package-lock.json .babelrc webpack.config.js /callblocker/
 
 # Install deps and builds the react client.
@@ -28,7 +27,7 @@ RUN apk add --no-cache pcre postgresql-dev musl-dev mailcap
 
 COPY . /callblocker
 
-COPY --from=build /callblocker/callblocker/frontend/static/frontend  /callblocker/callblocker/frontend/static/frontend
+COPY --from=build /callblocker/frontend/  /callblocker/frontend/
 
 RUN pip install -r /callblocker/requirements.txt
 

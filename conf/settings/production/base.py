@@ -24,5 +24,3 @@ DATABASES = {
         'PORT': environ['DB_PORT']
     }
 }
-
-DEBUG = True

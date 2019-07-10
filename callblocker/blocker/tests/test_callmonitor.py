@@ -12,7 +12,7 @@ from callblocker.core.tests.fakeserial import CX930xx_fake
 
 @pytest.mark.django_db
 def test_register_calls(fake_serial):
-    event = fake_serial.script(textwrap.dedent(
+    event = fake_serial.load_script(textwrap.dedent(
         """
         RING\n
         \n
@@ -69,7 +69,7 @@ def test_blocks_calls(fake_serial):
 
     blacklisted.save()
 
-    fake_serial.script(textwrap.dedent(
+    fake_serial.load_script(textwrap.dedent(
         """
         RING\n
         \n
