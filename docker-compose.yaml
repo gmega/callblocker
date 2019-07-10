@@ -1,49 +1,50 @@
 version: '3'
+
+volumes:
+  database-data:
+    driver: local
+
 services:
-  postgres:
+  database:
     restart: always
     image: postgres:alpine
-    environment:
-      - POSTGRES_USER=blocker_user
-      - POSTGRES_PASSWORD=blocker
-      - POSTGRES_DB=blocker
+    volumes:
+      - database-data:/var/lib/postgresql/data
+    env_file:
+      - database.env
 
-  callblocker-seed:
+  seed:
     image: callblocker:latest
+    volumes:
+      - database-data:/data
     command: ['/callblocker/bin/seed-db.sh']
+    env_file:
+      - database.env
     environment:
       - DJANGO_SETTINGS_MODULE=conf.settings.production.base
       - APP_FOLDER=/callblocker
-      - DB_NAME=blocker
-      - DB_USER=blocker_user
-      - DB_PASSWORD=blocker
-      - DB_HOST=postgres
-      - DB_PORT=5432
     depends_on:
-      - 'postgres'
+      - 'database'
     links:
-      - postgres
+      - database
 
-  callblocker:
+  backend:
     restart: always
     image: callblocker:latest
     ports:
       - '5000:${HOST_API_PORT:-5000}'
+    env_file:
+      - database.env
     environment:
       - DJANGO_SETTINGS_MODULE=conf.settings.production.server
-      - DB_NAME=blocker
-      - DB_USER=blocker_user
-      - DB_PASSWORD=blocker
-      - DB_HOST=postgres
-      - DB_PORT=5432
       - HOST_API_ADDRESS=${HOST_API_ADDRESS:?HOST_API_ADDRESS is required}
       - HOST_API_PORT=${HOST_API_PORT:-5000}
       - MODEM_DEBUG=${MODEM_DEBUG}
       - MODEM_USE_FAKE=${MODEM_USE_FAKE}
     depends_on:
-      - 'callblocker-seed'
-      - 'postgres'
+      - 'seed'
+      - 'database'
     links:
-      - postgres
+      - database
     devices:
       - '${HOST_MODEM_DEVICE:?HOST_MODEM_DEVICE is required}:/dev/ttyACM0'
