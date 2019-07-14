@@ -15,37 +15,34 @@ const useStyles = makeStyles(theme => ({
 
 export default class SimpleListMenu extends Component {
 
-    constructor(props) {
-        super(props);
-        this.classes = useStyles;
-        this.options = props.options;
-        this.onChange = props.onChange;
-        this.state = {
-            anchorEl: null,
-            selectedIndex: 0
-        };
-    }
+    classes = useStyles;
 
-    handleClickListItem = (event) => {
-        let state = this.state;
-        state.anchorEl = event.currentTarget;
-        this.setState(state)
+    state = {
+        anchorEl: null,
+        selectedIndex: 0
+    };
+
+    handleMenuClick = (event) => {
+        this.setState({
+            ...this.state,
+            anchorEl: event.currentTarget
+        })
     };
 
     handleMenuItemClick = (event, index) => {
-        let state = this.state;
-        state.selectedIndex = index;
-        state.anchorEl = null;
-        this.setState(state);
+        this.setState({
+            selectedIndex: index,
+            anchorEl: null
+        });
 
-        // Callback
-        this.onChange(this, index);
+        this.props.onChange(this, index);
     };
 
     handleClose = () => {
-        let state = this.state;
-        state.anchorEl = null;
-        this.setState(state);
+        this.setState({
+            ...this.state,
+            anchorEl: null
+        })
     };
 
     render() {
@@ -57,10 +54,10 @@ export default class SimpleListMenu extends Component {
                         aria-haspopup="true"
                         aria-controls="lock-menu"
                         aria-label="Show first"
-                        onClick={this.handleClickListItem}
+                        onClick={this.handleMenuClick}
                         style={{padding: 0}}
                     >
-                        <ListItemText primary="Show first" secondary={this.options[this.state.selectedIndex]}/>
+                        <ListItemText primary="Show first" secondary={this.props.options[this.state.selectedIndex]}/>
                     </ListItem>
                 </List>
                 <Menu
@@ -68,9 +65,8 @@ export default class SimpleListMenu extends Component {
                     anchorEl={this.state.anchorEl}
                     keepMounted
                     open={Boolean(this.state.anchorEl)}
-                    onClose={this.state.handleClose}
-                >
-                    {this.options.map((option, index) => (
+                    onClose={this.props.handleClose}>{
+                    this.props.options.map((option, index) => (
                         <MenuItem
                             key={option}
                             selected={index === this.state.selectedIndex}

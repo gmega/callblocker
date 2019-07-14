@@ -4,9 +4,10 @@
   "description": "callblocker ===========",
   "main": "index.js",
   "scripts": {
-    "dev": "webpack --mode development",
-    "build": "webpack --mode production",
-    "start": "webpack-dev-server --open"
+    "build-dev": "webpack --mode development",
+    "build-prod": "webpack --mode production",
+    "devserver": "webpack-dev-server --open",
+    "tests": "jest"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,8 @@
     "babel-plugin-transform-class-properties": "^6.24.1",
     "css-loader": "^3.0.0",
     "html-webpack-plugin": "^3.2.0",
+    "jest": "^24.8.0",
+    "memoize-one": "^5.0.5",
     "moment": "^2.24.0",
     "prop-types": "^15.7.2",
     "react": "^16.8.6",

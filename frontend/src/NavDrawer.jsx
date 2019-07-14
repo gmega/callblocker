@@ -1,17 +1,27 @@
 import React from 'react'
-import PropTypes from 'prop-types'
 import {
-    Divider, ListItem, ListItemIcon, ListItemText, List,
-    CssBaseline, AppBar, Toolbar, IconButton, Drawer, Hidden,
+    AppBar,
+    CssBaseline,
+    Divider,
+    Drawer,
+    Hidden,
+    IconButton,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Toolbar,
     Typography
 } from "@material-ui/core";
 
-import {useTheme, makeStyles} from '@material-ui/core/styles'
+import {makeStyles, useTheme} from '@material-ui/core/styles'
 
-import {Settings, ContactPhone, Phone} from "@material-ui/icons";
+import {ContactPhone, Phone, Settings} from "@material-ui/icons";
 
 import MenuIcon from '@material-ui/icons/Menu';
-import CallerList from "../CallerList";
+import CallerPanel from "./CallerPanel";
+
+import {removeKey, weakId, map} from './helpers';
 
 const drawerWidth = 240;
 
@@ -47,14 +57,60 @@ const useStyles = makeStyles(theme => ({
     },
 }));
 
-export default function ResponsiveDrawer(props) {
+
+export function ErrorArea(props) {
+    if (Object.entries(props.errors).length) {
+        return (
+            <div style={{backgroundColor: '#ff7272', color: 'white', padding: '1em'}}>
+                {Object.entries(props.errors).map(([key, value]) => <div key={key}>{value}</div>)}
+            </div>
+        )
+    } else {
+        return <div></div>;
+    }
+
+}
+
+export default function NavDrawer(props) {
     const {container} = props;
     const classes = useStyles();
     const theme = useTheme();
+
     const [mobileOpen, setMobileOpen] = React.useState(false);
+    const [errors, setErrors] = React.useState({});
 
     function handleDrawerToggle() {
         setMobileOpen(!mobileOpen);
+    }
+
+    function reportError(error_message, error_key = null) {
+        let id = error_key ? error_key : weakId();
+
+        // Has this error been reported already?
+        let oldError = errors[error_key];
+        if (oldError) {
+            // It has. Cancel timers on it or the error will be
+            // removed prematurely.
+            clearTimeout(oldError.timer);
+        }
+
+        // Sets the error (for the first time, or again)
+        // with a fresh timer.
+        setErrors({
+            ...errors,
+            [id]: {
+                message: error_message,
+                timer: setTimeout(removeError(id), 2000)
+            }
+        });
+    }
+
+    function reportUpdate(patches) {
+        console.log(`${patches.length} items updated successfully.`)
+    }
+
+    function removeError(id) {
+        return () => setErrors(removeKey(errors, id));
     }
 
     const drawer = (
@@ -99,6 +155,7 @@ export default function ResponsiveDrawer(props) {
                         Recent Callers
                     </Typography>
                 </Toolbar>
+                <ErrorArea errors={map(errors, (key, value) => value.message)}/>
             </AppBar>
             <nav className={classes.drawer} aria-label="Mailbox folders">
                 {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
@@ -114,8 +171,7 @@ export default function ResponsiveDrawer(props) {
                         }}
                         ModalProps={{
                             keepMounted: true, // Better open performance on mobile.
-                        }}
-                    >
+                        }}>
                         {drawer}
                     </Drawer>
                 </Hidden>
@@ -125,23 +181,17 @@ export default function ResponsiveDrawer(props) {
                             paper: classes.drawerPaper,
                         }}
                         variant="permanent"
-                        open
-                    >
+                        open>
                         {drawer}
                     </Drawer>
                 </Hidden>
             </nav>
             <main className={classes.content}>
                 <div className={classes.toolbar}/>
-                <CallerList/>
+                <CallerPanel onError={reportError} onUpdate={reportUpdate}/>
             </main>
         </div>
     );
 }
 
-ResponsiveDrawer.propTypes = {
-    // Injected by the documentation to work in an iframe.
-    // You won't need it on your project.
-    container: PropTypes.object,
-};
 
