@@ -4,7 +4,7 @@ import {camelize, snakeize} from "./helpers";
 import {Button, Grid, List, makeStyles, Paper, Typography} from "@material-ui/core";
 import SimpleListMenu from "./SimpleListMenu";
 import PropTypes from "prop-types";
-import Caller from "./Caller";
+import {Caller, EditableCaller} from "./Caller";
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -98,6 +98,19 @@ class CallerPanel extends React.Component {
         });
     };
 
+    callerModified = (fullNumber, description, notes) => {
+        patchCallers(
+            'update_callers',
+            [snakeize({
+                fullNumber: fullNumber,
+                description: description,
+                notes: notes
+            })],
+            this.updateSuccessful,
+            this.reportError
+        )
+    };
+
     updateBlockingStatus = (block) => {
         let selectedCallers = this.state.callers.filter((caller) => SELECTED(caller, this.state.selection));
         let patches = selectedCallers.map((caller) => {
@@ -162,7 +175,11 @@ class CallerPanel extends React.Component {
                                 <Paper elevation="0">
                                     <List style={{maxHeight: 'calc(100vh - 250px)', overflow: "auto"}} dense={false}>
                                         {this.state.callers.map(phone =>
-                                            <Caller key={phone.fullNumber} {...phone} onSelect={this.callerSelected}/>)}
+                                            <EditableCaller
+                                                key={phone.fullNumber} {...phone}
+                                                onSelect={this.callerSelected}
+                                                onSubmit={this.callerModified}
+                                            />)}
                                     </List>
                                 </Paper>
                                 <Button variant="contained"

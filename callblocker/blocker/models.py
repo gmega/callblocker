@@ -30,7 +30,7 @@ class Caller(models.Model):
 
     source = models.ForeignKey(Source, on_delete=models.PROTECT)
     description = models.CharField(max_length=200, default='')
-    notes = models.TextField(default='')
+    notes = models.TextField(default='', blank=True)
 
     def save(self, *args, **kwargs):
         self.full_number = self.area_code.strip() + self.number.strip()

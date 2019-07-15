@@ -10,6 +10,7 @@ import {
     ListItem,
     ListItemIcon,
     ListItemText,
+    Snackbar,
     Toolbar,
     Typography
 } from "@material-ui/core";
@@ -21,7 +22,7 @@ import {ContactPhone, Phone, Settings} from "@material-ui/icons";
 import MenuIcon from '@material-ui/icons/Menu';
 import CallerPanel from "./CallerPanel";
 
-import {removeKey, weakId, map} from './helpers';
+import {map, removeKey, weakId} from './helpers';
 
 const drawerWidth = 240;
 
@@ -78,6 +79,7 @@ export default function NavDrawer(props) {
 
     const [mobileOpen, setMobileOpen] = React.useState(false);
     const [errors, setErrors] = React.useState({});
+    const [message, setMessage] = React.useState(null);
 
     function handleDrawerToggle() {
         setMobileOpen(!mobileOpen);
@@ -106,7 +108,8 @@ export default function NavDrawer(props) {
     }
 
     function reportUpdate(patches) {
-        console.log(`${patches.length} items updated successfully.`)
+        setMessage(`${patches.length} item${patches.length > 1 ? 's' : ''} updated successfully.`)
+        setTimeout(() => setMessage(null), 3000);
     }
 
     function removeError(id) {
@@ -189,6 +192,10 @@ export default function NavDrawer(props) {
             <main className={classes.content}>
                 <div className={classes.toolbar}/>
                 <CallerPanel onError={reportError} onUpdate={reportUpdate}/>
+                <Snackbar
+                    open={message != null}
+                    message={message}
+                />
             </main>
         </div>
     );
