@@ -17,7 +17,7 @@ from os import environ
 
 MODEM_DEVICE = '/dev/ttyACM0'
 MODEM_BAUD = 115200
-MODEM_DEBUG = bool(environ.get('MODEM_USE_FAKE', 'False'))
+MODEM_DEBUG = bool(environ.get('MODEM_DEBUG', 'False'))
 MODEM_USE_FAKE = bool(environ.get('MODEM_USE_FAKE', 'False'))
 
 MODEM_TELCO = 'Vivo'
