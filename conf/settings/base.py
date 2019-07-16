@@ -12,13 +12,18 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 
-# Modem and telephone provider configuration.
 from os import environ
 
+
+def bool_env(var, default):
+    return environ.get(var, default).strip().lower() == 'true'
+
+
+# Modem and telephone provider configuration.
 MODEM_DEVICE = '/dev/ttyACM0'
 MODEM_BAUD = 115200
-MODEM_DEBUG = bool(environ.get('MODEM_DEBUG', 'False'))
-MODEM_USE_FAKE = bool(environ.get('MODEM_USE_FAKE', 'False'))
+MODEM_DEBUG = bool_env('MODEM_USE_FAKE', 'False')
+MODEM_USE_FAKE = bool_env('MODEM_DEBUG', 'False')
 
 MODEM_TELCO = 'Vivo'
 MODEM_TYPE = 'CX930xx'

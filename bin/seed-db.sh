@@ -4,7 +4,7 @@
 
 set -e
 
-if [[ -e /data/seed-mark ]]; then
+if [[ -e ${SEED_MARK_FOLDER}/seed-mark ]]; then
     echo "Database already seeded."
     exit 2
 fi
@@ -19,4 +19,4 @@ echo "Seeding database."
 
 python ./manage.py loaddata ./callblocker/blocker/fixtures/initial.yaml
 
-touch /data/seed-mark
+touch ${SEED_MARK_FOLDER}/seed-mark

@@ -2,7 +2,7 @@
 
 set -e
 
-cd /callblocker
+cd ${APP_FOLDER}
 
 python -m callblocker.misc.preprocess ./frontend/dist
 

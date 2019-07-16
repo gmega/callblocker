@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 
 from callblocker.blocker import BOOTSTRAP_CALLMONITOR
@@ -19,6 +21,7 @@ from callblocker.core.tests.fakeserial import ScriptedModem, CX930xx_fake
 # The solution is therefore to put a flag here which, when set to False, modifies the behavior of the
 # bootstrap module and disables modem monitoring. Ugh.
 
+logger = logging.getLogger(__name__)
 
 _modem = None
 
@@ -48,8 +51,10 @@ if BOOTSTRAP_CALLMONITOR:
 
     def modem_from_settings() -> Modem:
         if settings.MODEM_USE_FAKE:
+            logger.warn('*** You are using a SIMULATED modem (MODEM_USE_FAKE = True)! Make sure that is what you want.')
             return Modem(CX930xx_fake, ScriptedModem.from_modem_type(CX930xx_fake))
 
+        logging.info('**** Bootstrapping SERIAL modem at %s' % settings.MODEM_DEVICE)
         return Modem(CX930xx, PySerialDevice(settings.MODEM_DEVICE, settings.MODEM_BAUD))
 
 else:

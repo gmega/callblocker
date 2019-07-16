@@ -22,7 +22,7 @@ services:
       - database.env
     environment:
       - DJANGO_SETTINGS_MODULE=conf.settings.production.base
-      - APP_FOLDER=/callblocker
+      - SEED_MARK_FOLDER=/data
     depends_on:
       - 'database'
     links:
@@ -39,8 +39,8 @@ services:
       - DJANGO_SETTINGS_MODULE=conf.settings.production.server
       - HOST_API_ADDRESS=${HOST_API_ADDRESS:?HOST_API_ADDRESS is required}
       - HOST_API_PORT=${HOST_API_PORT:-5000}
-      - MODEM_DEBUG=${MODEM_DEBUG}
-      - MODEM_USE_FAKE=${MODEM_USE_FAKE}
+      - MODEM_DEBUG=${MODEM_DEBUG:-False}
+      - MODEM_USE_FAKE=${MODEM_USE_FAKE:-False}
     depends_on:
       - 'seed'
       - 'database'

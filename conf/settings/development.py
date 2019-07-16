@@ -10,9 +10,16 @@ CORS_ORIGIN_ALLOW_ALL = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[django] {levelname} {asctime} {module} {message}',
+            'style': '{'
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
         },
     },
     'root': {
@@ -32,5 +39,5 @@ DATABASES = {
     }
 }
 
-MODEM_USE_FAKE = bool(environ.get('MODEM_USE_FAKE', 'True'))
+MODEM_USE_FAKE = bool_env('MODEM_USE_FAKE', 'True')
 MODEM_DEBUG = True
