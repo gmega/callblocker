@@ -16,13 +16,11 @@ import {
 } from "@material-ui/core";
 
 import {makeStyles, useTheme} from '@material-ui/core/styles'
-
 import {ContactPhone, Phone, Settings} from "@material-ui/icons";
-
 import MenuIcon from '@material-ui/icons/Menu';
 import CallerPanel from "./CallerPanel";
-
 import {map, removeKey, weakId} from './helpers';
+import {BrowserRouter, Link, Redirect, Route} from "react-router-dom";
 
 const drawerWidth = 240;
 
@@ -56,6 +54,10 @@ const useStyles = makeStyles(theme => ({
         flexGrow: 1,
         padding: theme.spacing(3),
     },
+    link: {
+        color: 'inherit',
+        textDecoration: 'inherit'
+    }
 }));
 
 
@@ -121,21 +123,27 @@ export default function NavDrawer(props) {
             <div className={classes.toolbar}/>
             <Divider/>
             <List>
-                <ListItem button key='Recent Callers'>
-                    <ListItemIcon><Phone/></ListItemIcon>
-                    <ListItemText primary='Recent Callers'/>
-                </ListItem>
-                <ListItem button key='Phonebook'>
-                    <ListItemIcon><ContactPhone/></ListItemIcon>
-                    <ListItemText primary='Phonebook'/>
-                </ListItem>
+                <Link to='/callers' className={classes.link}>
+                    <ListItem button key='Recent Callers'>
+                        <ListItemIcon><Phone/></ListItemIcon>
+                        <ListItemText primary='Recent Callers'/>
+                    </ListItem>
+                </Link>
+                <Link to='/phonebook' className={classes.link}>
+                    <ListItem button key='Phonebook'>
+                        <ListItemIcon><ContactPhone/></ListItemIcon>
+                        <ListItemText primary='Phonebook'/>
+                    </ListItem>
+                </Link>
             </List>
             <Divider/>
             <List>
-                <ListItem button key='Settings'>
-                    <ListItemIcon><Settings/></ListItemIcon>
-                    <ListItemText primary='Settings'/>
-                </ListItem>
+                <Link to='/settings' className={classes.link}>
+                    <ListItem button key='Settings'>
+                        <ListItemIcon><Settings/></ListItemIcon>
+                        <ListItemText primary='Settings'/>
+                    </ListItem>
+                </Link>
             </List>
         </div>
     );
@@ -143,60 +151,80 @@ export default function NavDrawer(props) {
     return (
         <div className={classes.root}>
             <CssBaseline/>
-            <AppBar position="fixed" className={classes.appBar}>
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        aria-label="Open drawer"
-                        edge="start"
-                        onClick={handleDrawerToggle}
-                        className={classes.menuButton}
-                    >
-                        <MenuIcon/>
-                    </IconButton>
-                    <Typography variant="h6" noWrap>
-                        Recent Callers
-                    </Typography>
-                </Toolbar>
-                <ErrorArea errors={map(errors, (key, value) => value.message)}/>
-            </AppBar>
-            <nav className={classes.drawer} aria-label="Mailbox folders">
-                {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-                <Hidden smUp implementation="css">
-                    <Drawer
-                        container={container}
-                        variant="temporary"
-                        anchor={theme.direction === 'rtl' ? 'right' : 'left'}
-                        open={mobileOpen}
-                        onClose={handleDrawerToggle}
-                        classes={{
-                            paper: classes.drawerPaper,
-                        }}
-                        ModalProps={{
-                            keepMounted: true, // Better open performance on mobile.
-                        }}>
-                        {drawer}
-                    </Drawer>
-                </Hidden>
-                <Hidden xsDown implementation="css">
-                    <Drawer
-                        classes={{
-                            paper: classes.drawerPaper,
-                        }}
-                        variant="permanent"
-                        open>
-                        {drawer}
-                    </Drawer>
-                </Hidden>
-            </nav>
-            <main className={classes.content}>
-                <div className={classes.toolbar}/>
-                <CallerPanel onError={reportError} onUpdate={reportUpdate}/>
-                <Snackbar
-                    open={message != null}
-                    message={message}
-                />
-            </main>
+            <BrowserRouter>
+                {/* We put this route here to avoid having to leak the default path into
+                    the webserver config. */}
+                <Route exact path="/" render={() => (<Redirect to="/callers"/>)}/>
+                <AppBar position="fixed" className={classes.appBar}>
+                    <Toolbar>
+                        <IconButton
+                            color="inherit"
+                            aria-label="Open drawer"
+                            edge="start"
+                            onClick={handleDrawerToggle}
+                            className={classes.menuButton}
+                        >
+                            <MenuIcon/>
+                        </IconButton>
+                        <Route path="/callers" render={() => (
+                            <Typography variant="h6" noWrap>
+                                Recent Callers
+                            </Typography>
+                        )}/>
+                        <Route path="/Phonebook" render={() => (
+                            <Typography variant="h6" noWrap>
+                                Phonebook
+                            </Typography>
+                        )}/>
+                        <Route path="/Settings" render={() => (
+                            <Typography variant="h6" noWrap>
+                                Settings
+                            </Typography>
+                        )}/>
+
+                    </Toolbar>
+                    <ErrorArea errors={map(errors, (key, value) => value.message)}/>
+                </AppBar>
+                <nav className={classes.drawer} aria-label="Mailbox folders">
+                    {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
+                    <Hidden smUp implementation="css">
+                        <Drawer
+                            container={container}
+                            variant="temporary"
+                            anchor={theme.direction === 'rtl' ? 'right' : 'left'}
+                            open={mobileOpen}
+                            onClose={handleDrawerToggle}
+                            classes={{
+                                paper: classes.drawerPaper,
+                            }}
+                            ModalProps={{
+                                keepMounted: true, // Better open performance on mobile.
+                            }}>
+                            {drawer}
+                        </Drawer>
+                    </Hidden>
+                    <Hidden xsDown implementation="css">
+                        <Drawer
+                            classes={{
+                                paper: classes.drawerPaper,
+                            }}
+                            variant="permanent"
+                            open>
+                            {drawer}
+                        </Drawer>
+                    </Hidden>
+                </nav>
+                <main className={classes.content}>
+                    <div className={classes.toolbar}/>
+                    <Route path="/callers" render={() => {
+                        return <CallerPanel onError={reportError} onUpdate={reportUpdate}/>
+                    }}/>
+                    <Snackbar
+                        open={message != null}
+                        message={message}
+                    />
+                </main>
+            </BrowserRouter>
         </div>
     );
 }

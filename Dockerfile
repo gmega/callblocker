@@ -6,16 +6,16 @@ FROM node:12.5.0 as build
 ARG APP_FOLDER_ARG
 ENV APP_FOLDER=${APP_FOLDER_ARG}
 
-# We copy only the JS code to avoid needlessly running this stage for
-# backend changes.
+# Install deps first to leverage caching.
 RUN mkdir -p ${APP_FOLDER}/frontend
 
-COPY ./frontend/ ${APP_FOLDER}/frontend/
-COPY package.json package-lock.json .babelrc webpack.config.js ${APP_FOLDER}/
-
-# Install deps and builds the react client.
 WORKDIR ${APP_FOLDER}
+COPY package.json package-lock.json .babelrc webpack.config.js ${APP_FOLDER}/
 RUN npm install --silent
+
+COPY ./frontend/ ${APP_FOLDER}/frontend/
+
+# Builds the react client.
 RUN npm run build-prod
 
 # ==== Server Assembly
