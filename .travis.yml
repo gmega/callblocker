@@ -1,9 +1,11 @@
+language: python
+
 services:
   - docker
 
 before_install:
   - docker-compose -f docker-compose.local.yaml pull
-  - docker -f docker-compose.local.yaml -f docker-compose.tests.yaml build
+  - docker-compose -f docker-compose.local.yaml -f docker-compose.tests.yaml build
 
 script:
   - docker-compose -f docker-compose.local.yaml -f docker-compose.tests.yaml up --abort-on-container-exit --exit-code-from testrunner
