@@ -265,12 +265,8 @@ export function EditableCaller(props) {
     return (
         <div>
             <Caller {...props} onEdit={handleEditClicked} onSelect={props.onSelect}/>
-<<<<<<< HEAD
             <CallerEditForm {...props} open={editFormOpen} onSubmit={handleFormSubmitted}
                             onCancel={handleEditCancelled}/>
-=======
-            <CallerEditForm {...props} open={editFormOpen} onSubmit={handleFormSubmitted} onCancel={handleEditCancelled}/>
->>>>>>> 13fcb3a2c7a59bfe889998f625f57edd966b0e7d
         </div>
     )
 }
