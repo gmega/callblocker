@@ -9,3 +9,5 @@
 # Do not scoop in frontend bundles built locally
 /frontend/dist
 
+# Misc
+webpack-stats.json

@@ -2,6 +2,8 @@ import {
     Avatar,
     Box,
     Button,
+    Dialog,
+    DialogContent,
     IconButton,
     ListItem,
     ListItemAvatar,
@@ -11,13 +13,14 @@ import {
     Typography
 } from "@material-ui/core";
 import {useTheme} from '@material-ui/core/styles';
-import Checkbox from "@material-ui/core/Checkbox";
 import {Block, Cancel, Delete, Edit, Phone, Save} from "@material-ui/icons";
 import {formatTime} from "./helpers";
 import PropTypes from "prop-types";
 import React from "react";
 import moment from 'moment';
 import makeStyles from "@material-ui/core/styles/makeStyles";
+import {blue} from '@material-ui/core/colors';
+import {isMobile, isIOS} from "react-device-detect";
 
 const useStyles = makeStyles(theme => ({
     editorContainer: {
@@ -39,11 +42,21 @@ const useStyles = makeStyles(theme => ({
     editorItems: {
         marginTop: theme.spacing(1),
         marginBottom: theme.spacing(1)
+    },
+    selectedAvatar: {
+        backgroundColor: blue[500]
     }
 
 }));
 
+
+    alert(`Is mobile: ${isMobile}`);
+    alert(`Is safari: ${isIOS}`);
+
+
 export function Caller(props) {
+
+    const classes = useStyles();
 
     const [editBarOpen, setEditBarOpen] = React.useState(false);
 
@@ -55,10 +68,6 @@ export function Caller(props) {
         props.onDelete(props);
     }
 
-    function handleSelectionToggle(source, toggleState) {
-        props.onSelect(props, toggleState);
-    }
-
     function handleMouseOver() {
         setEditBarOpen(true);
     }
@@ -67,19 +76,35 @@ export function Caller(props) {
         setEditBarOpen(false);
     }
 
+    function toggleSelected() {
+        props.onSelect(props, !props.selected);
+    }
+
+    /*
+    * Safari will screw up the avatar button click if we install an onMouseOver handler
+    *
+    *    http://sitr.us/2011/07/28/how-mobile-safari-emulates-mouse-events.html
+    *
+    * but my testing shows that the same problem happens in Firefox. So we do not install
+    * onMouseOver it if we're running in iOS.
+    * */
+    const listItemHandlers = {
+        onClick: handleMouseOver,
+        onMouseLeave: handleMouseOut
+    };
+
+    if (!isMobile || !isIOS) {
+        listItemHandlers.onMouseOver = handleMouseOver
+    }
+
     return (
         <Box boxShadow={editBarOpen ? 1 : 0} style={{margin: '5px'}}>
-            <ListItem key={props.fullNumber} onMouseOver={handleMouseOver} onMouseLeave={handleMouseOut}>
-                <Checkbox
-                    edge="start"
-                    tabIndex={-1}
-                    disableRipple
-                    onChange={handleSelectionToggle}
-                    name={props.fullNumber}
-                />
-                <ListItemAvatar>
-                    <Avatar>
-                        {props.block ? <Block/> : <Phone/>}
+            <ListItem key={props.fullNumber} {...listItemHandlers}>
+                <ListItemAvatar onClick={toggleSelected}>
+                    <Avatar className={props.selected ? classes.selectedAvatar : null}>
+                        {
+                            props.block ? <Block/> : <Phone/>
+                        }
                     </Avatar>
                 </ListItemAvatar>
                 <ListItemText
@@ -150,8 +175,8 @@ function CallerEditForm(props) {
     }
 
     return (
-        <Box className={classes.editorContainer}>
-            <Box className={classes.editorContainer} boxShadow={1}>
+        <Dialog open={props.open}>
+            <DialogContent>
                 <Box className={classes.editorContainerInner}>
                     <ListItemAvatar>
                         <Avatar>
@@ -202,9 +227,8 @@ function CallerEditForm(props) {
                         <Cancel style={{marginRight: theme.spacing(1)}}/>Cancel
                     </Button>
                 </Box>
-
-            </Box>
-        </Box>
+            </DialogContent>
+        </Dialog>
     )
 }
 
@@ -242,9 +266,12 @@ export function EditableCaller(props) {
         setEditFormOpen(false);
     }
 
-    return !editFormOpen ?
-        <Caller {...props} onEdit={handleEditClicked} onSelect={props.onSelect}/> :
-        <CallerEditForm {...props} onSubmit={handleFormSubmitted} onCancel={handleEditCancelled}/>
+    return (
+        <div>
+            <Caller {...props} onEdit={handleEditClicked} onSelect={props.onSelect}/>
+            <CallerEditForm {...props} open={editFormOpen} onSubmit={handleFormSubmitted} onCancel={handleEditCancelled}/>
+        </div>
+    )
 }
 
 EditableCaller.propTypes = {

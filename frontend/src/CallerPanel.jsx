@@ -92,6 +92,7 @@ class CallerPanel extends React.Component {
         } else {
             newSelection.delete(source.fullNumber)
         }
+        console.log(newSelection);
         this.setState({
             ...this.state,
             selection: newSelection
@@ -156,7 +157,7 @@ class CallerPanel extends React.Component {
     render() {
         return (
             <div>
-                <Grid container spacing={2} style={{maxWidth: '50vw', minWidth: '380px'}}>
+                <Grid container spacing={2} style={{maxWidth: '50vw', minWidth: '440px'}}>
                     <Grid container xs={6} alignItems="center" justifyContent="center">
                         <Typography variant="h6" style={{padding: "8px"}}>
                             Recent Callers
@@ -179,6 +180,7 @@ class CallerPanel extends React.Component {
                                                 key={phone.fullNumber} {...phone}
                                                 onSelect={this.callerSelected}
                                                 onSubmit={this.callerModified}
+                                                selected={this.state.selection.has(phone.fullNumber)}
                                             />)}
                                     </List>
                                 </Paper>

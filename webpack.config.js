@@ -5,7 +5,7 @@ module.exports = {
 
     context: __dirname,
 
-    entry: './frontend/src/index.js',
+    entry: './frontend/src/index.jsx',
     output: {
         path: path.resolve('./frontend/dist'),
         filename: 'index_bundle.js'
@@ -17,7 +17,9 @@ module.exports = {
         })
     ],
     devServer: {
-        contentBase: './frontend/dist'
+        contentBase: './frontend/dist',
+        historyApiFallback: true,
+        host: '0.0.0.0'
     },
     resolve: {
         extensions: ['.js', '.jsx']

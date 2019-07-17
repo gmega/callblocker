@@ -102,5 +102,5 @@ if BOOTSTRAP_CALLMONITOR:
         return Modem(CX930xx, PySerialDevice(settings.MODEM_DEVICE, settings.MODEM_BAUD))
 
 else:
-    def _bootstrap():
+    def _bootstrap(_):
         pass
