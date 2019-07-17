@@ -1,7 +1,6 @@
 # Standard Python ignores
-*pytest_cache
-*pyc
-*__pycache__
+**/pytest_cache
+**/__pycache__
 
 # Dev tools
 .git

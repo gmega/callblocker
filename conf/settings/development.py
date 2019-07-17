@@ -34,7 +34,7 @@ DATABASES = {
         'NAME': 'blocker',
         'USER': 'devel',
         'PASSWORD': 'devel',
-        'HOST': 'localhost',
+        'HOST': environ.get('DB_HOST', 'localhost'),
         'PORT': '5432'
     }
 }

@@ -1,0 +1,16 @@
+# Compose file which fires the test runner. You'll need to include
+# docker-compose.local.yaml for it to work.
+
+version: '3'
+
+services:
+
+  testrunner:
+    image: callblocker:latest
+    depends_on:
+      - 'database-dev'
+    links:
+      - database-dev
+    environment:
+      - DB_HOST=database-dev
+    command: ['sh', '/callblocker/bin/run-tests.sh']

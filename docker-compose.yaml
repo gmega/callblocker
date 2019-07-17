@@ -1,3 +1,5 @@
+# Compose file to get a full deployment running.
+
 version: '3'
 
 volumes:
@@ -5,6 +7,7 @@ volumes:
     driver: local
 
 services:
+
   database:
     restart: always
     image: postgres:alpine
@@ -17,17 +20,19 @@ services:
     image: callblocker:latest
     volumes:
       - database-data:/data
-    command: ['/callblocker/bin/seed-db.sh']
+    command: ['sh', '/callblocker/bin/seed-db.sh']
     env_file:
       - database.env
     environment:
       - DJANGO_SETTINGS_MODULE=conf.settings.production.base
       - SEED_MARK_FOLDER=/data
+      - LOAD_SAMPLE_DATA=${LOAD_SAMPLE_DATA:-False}
     depends_on:
       - 'database'
     links:
       - database
 
+  # Actual backend server.
   backend:
     restart: always
     image: callblocker:latest
@@ -48,3 +53,4 @@ services:
       - database
     devices:
       - '${HOST_MODEM_DEVICE:?HOST_MODEM_DEVICE is required}:/dev/ttyACM0'
+    

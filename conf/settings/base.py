@@ -22,14 +22,14 @@ def bool_env(var, default):
 # Modem and telephone provider configuration.
 MODEM_DEVICE = '/dev/ttyACM0'
 MODEM_BAUD = 115200
-MODEM_DEBUG = bool_env('MODEM_USE_FAKE', 'False')
-MODEM_USE_FAKE = bool_env('MODEM_DEBUG', 'False')
+MODEM_DEBUG = bool_env('MODEM_DEBUG', 'False')
+MODEM_USE_FAKE = bool_env('MODEM_USE_FAKE', 'False')
 
 MODEM_TELCO = 'Vivo'
 MODEM_TYPE = 'CX930xx'
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
@@ -117,3 +117,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'frontend/dist/static/')
+

@@ -19,4 +19,9 @@ echo "Seeding database."
 
 python ./manage.py loaddata ./callblocker/blocker/fixtures/initial.yaml
 
+if [[ "${LOAD_SAMPLE_DATA}" = "True" ]]; then
+    echo "Loading sample data."
+    python ./manage.py loaddata ./callblocker/blocker/fixtures/sample_data.yaml
+fi
+
 touch ${SEED_MARK_FOLDER}/seed-mark

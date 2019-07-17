@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 from django.conf import settings
 
@@ -24,6 +25,38 @@ from callblocker.core.tests.fakeserial import ScriptedModem, CX930xx_fake
 logger = logging.getLogger(__name__)
 
 _modem = None
+_callmonitor = None
+
+
+def bootstrap_callmonitor(modem: Optional[Modem] = None) -> CallMonitor:
+    """
+    Initializes and returns the global :class:`CallMonitor` instance. :func:`bootstrap_callmonitor` will take care
+    of initializing an asyncio loop in a separate thread and scheduling their event loops with :class:`HealthMonitor`.
+    After successful initialization, subsequent calls to this method will return the same instance of
+    :class:`CallMonitor`.
+
+    :param modem:
+        a preconfigured :class:`Modem`, or None if the modem is to be created from settings.
+
+    :return: a running :class:`CallMonitor`.
+    """
+    return _bootstrap(modem)
+
+
+def bootstrap_callmonitor_noexc(modem: Optional[Modem] = None) -> Optional[CallMonitor]:
+    """
+    Convenience version of :func:`bootstrap_callmonitor` which logs any eventual exceptions and then
+    swallows them.
+
+    :param modem:
+        a preconfigured :class:`Modem`, or None if the modem is to be created from settings.
+
+    :return: a running :class:`CallMonitor`.
+    """
+    try:
+        return bootstrap_callmonitor(modem)
+    except:
+        logger.exception('Failed to bootstrap the call monitor.')
 
 
 def modem() -> Modem:
@@ -33,23 +66,34 @@ def modem() -> Modem:
     return _modem
 
 
+def callmonitor() -> CallMonitor:
+    if _callmonitor is None:
+        raise Exception('The call monitor has not been bootstrapped.')
+
+    return _callmonitor
+
+
 if BOOTSTRAP_CALLMONITOR:
 
-    def bootstrap_callmonitor(modem: Modem = None) -> CallMonitor:
-        global _modem
+    def _bootstrap(modem: Optional[Modem] = None) -> CallMonitor:
+        global _callmonitor, _modem
 
         supervisor = healthmonitor.monitor()
-        _modem = modem if modem is not None else modem_from_settings()
+        modem = modem if modem is not None else _modem_from_settings()
 
-        aio_loop, _ = bootstrap_modem(_modem, supervisor)
+        aio_loop, _ = bootstrap_modem(modem, supervisor)
 
-        blocker = CallMonitor(Vivo(), _modem)
-        supervisor.run_coroutine_threadsafe(blocker.loop(), 'call monitor event loop', aio_loop)
+        callmonitor = CallMonitor(Vivo(), modem)
+        supervisor.run_coroutine_threadsafe(callmonitor.loop(), 'call monitor event loop', aio_loop)
 
-        return blocker
+        # If everything worked out okay...
+        _modem = modem
+        _callmonitor = callmonitor
+
+        return _callmonitor
 
 
-    def modem_from_settings() -> Modem:
+    def _modem_from_settings() -> Modem:
         if settings.MODEM_USE_FAKE:
             logger.warn('*** You are using a SIMULATED modem (MODEM_USE_FAKE = True)! Make sure that is what you want.')
             return Modem(CX930xx_fake, ScriptedModem.from_modem_type(CX930xx_fake))
@@ -58,5 +102,5 @@ if BOOTSTRAP_CALLMONITOR:
         return Modem(CX930xx, PySerialDevice(settings.MODEM_DEVICE, settings.MODEM_BAUD))
 
 else:
-    def bootstrap_callmonitor():
+    def _bootstrap():
         pass

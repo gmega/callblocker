@@ -41,9 +41,16 @@ RUN pip install -r ${APP_FOLDER}/requirements.txt
 
 RUN apk del .build-deps && rm -rf /var/cache/apk/*
 
+# Copies the source code.
 COPY . ${APP_FOLDER}
 
+# Copies the frontend from the previous build stage.
 COPY --from=build ${APP_FOLDER}/frontend/  ${APP_FOLDER}/frontend/
 
+# Wraps up collecting static assets from other apps (e.g. restframework).
+WORKDIR ${APP_FOLDER}
+RUN python ./manage.py collectstatic --settings conf.settings.base --noinput
+
+# Good to go!
 EXPOSE 5000
 CMD sh ${APP_FOLDER}/bin/launch.sh

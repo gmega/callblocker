@@ -1,6 +1,10 @@
+# Local dev. configuration for getting a Postgresql up and running.
+
 version: '3'
+
 services:
-  postgres-dev:
+
+  database-dev:
     restart: always
     image: postgres:alpine
     ports:
