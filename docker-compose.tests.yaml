@@ -7,6 +7,8 @@ services:
 
   testrunner:
     image: callblocker:latest
+    build:
+      context: .
     depends_on:
       - 'database-dev'
     links:
