@@ -20,11 +20,7 @@ import React from "react";
 import moment from 'moment';
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import {blue} from '@material-ui/core/colors';
-<<<<<<< HEAD
-import {isIOS, isMobile} from "react-device-detect";
-=======
 import {isMobile, isIOS} from "react-device-detect";
->>>>>>> 13fcb3a2c7a59bfe889998f625f57edd966b0e7d
 
 const useStyles = makeStyles(theme => ({
     editorContainer: {
