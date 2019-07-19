@@ -35,7 +35,7 @@ export default class SimpleListMenu extends Component {
             anchorEl: null
         });
 
-        this.props.onChange(this, index);
+        this.props.onChange(index);
     };
 
     handleClose = () => {

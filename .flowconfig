@@ -1,0 +1,13 @@
+[ignore]
+
+[include]
+./frontend/src
+
+[libs]
+
+[lints]
+
+[options]
+suppress_comment= \\(.\\|\n\\)*\\$FlowIgnore
+
+[strict]

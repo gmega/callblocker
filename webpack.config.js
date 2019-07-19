@@ -1,5 +1,6 @@
 const path = require('path');
-const HtmlWebpackPlugin = require('html-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const FlowWebpackPlugin = require('flow-webpack-plugin');
 
 module.exports = {
 
@@ -14,7 +15,8 @@ module.exports = {
         new HtmlWebpackPlugin({
             title: 'Callblocker',
             template: './frontend/public/index.html'
-        })
+        }),
+        new FlowWebpackPlugin()
     ],
     devServer: {
         contentBase: './frontend/dist',

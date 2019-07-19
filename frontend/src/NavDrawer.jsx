@@ -71,7 +71,6 @@ export function ErrorArea(props) {
     } else {
         return <div></div>;
     }
-
 }
 
 export default function NavDrawer(props) {
