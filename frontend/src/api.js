@@ -39,7 +39,7 @@ export function fetchCallers(
     })
     .catch((reason) => onError(
       opId,
-      reason,
+      reason, //FIXME this is not a Response
       ERROR_TYPES.network
     ));
 }
@@ -72,7 +72,7 @@ export function patchCallers(
       }
     }).catch((reason) => onError(
       opId,
-      ERROR_TYPES.network,
-      reason
+      reason, //FIXME this is not a Response
+      ERROR_TYPES.network
     ));
 }
