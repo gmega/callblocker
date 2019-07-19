@@ -2,7 +2,7 @@
 
 import {Response} from 'flow';
 import type {Caller, CallerDelta} from './Caller';
-import {fromAPIObject} from './Caller';
+import {fromAPIObject, toAPIObject} from './Caller';
 
 export const API_PARAMETERS = {
   endpoint: 'http://localhost:8000/',
@@ -58,7 +58,7 @@ export function patchCallers(
         'Content-Type': 'application/json'
       },
       method: 'PATCH',
-      body: JSON.stringify(patches) // We don't do any verification here.
+      body: JSON.stringify(patches.map(toAPIObject)) // We don't do any verification here.
     })
     .then(response => {
       if (!response.ok) {

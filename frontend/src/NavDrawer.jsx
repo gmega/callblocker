@@ -22,6 +22,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import {TimeoutID} from 'flow';
 import React from 'react'
 import {BrowserRouter, Link, Redirect, Route} from "react-router-dom";
+import type {CallerDelta} from './Caller';
 import CallerPanel from "./CallerPanel";
 import {map, weakId} from './helpers';
 
@@ -114,12 +115,12 @@ export default function NavDrawer() {
     setErrors(newErrors);
   }
 
-  function reportUpdate(patches) {
+  function reportUpdate(patches: Array<CallerDelta>) {
     setMessage(`${patches.length} item${patches.length > 1 ? 's' : ''} updated successfully.`)
     setTimeout(() => setMessage(null), 3000);
   }
 
-  function removeError(id) {
+  function removeError(id: string) {
     return () => {
       let newErrors = new Map(errors);
       newErrors.delete(id);
@@ -188,12 +189,12 @@ export default function NavDrawer() {
                 Recent Callers
               </Typography>
             )}/>
-            <Route path="/Phonebook" render={() => (
+            <Route path="/phonebook" render={() => (
               <Typography variant="h6" noWrap>
                 Phonebook
               </Typography>
             )}/>
-            <Route path="/Settings" render={() => (
+            <Route path="/settings" render={() => (
               <Typography variant="h6" noWrap>
                 Settings
               </Typography>
