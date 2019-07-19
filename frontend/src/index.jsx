@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from './App';
+import NavDrawer from './NavDrawer';
 
-ReactDOM.render(<App/>, document.getElementById('root'));
+ReactDOM.render(<NavDrawer/>, document.getElementById('root'));
 

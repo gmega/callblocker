@@ -39,8 +39,8 @@ export function fetchCallers(
     })
     .catch((reason) => onError(
       opId,
-      ERROR_TYPES.network,
-      reason
+      reason,
+      ERROR_TYPES.network
     ));
 }
 
@@ -71,8 +71,8 @@ export function patchCallers(
         onSuccess(opId, patches);
       }
     }).catch((reason) => onError(
-    opId,
-    ERROR_TYPES.network,
-    reason
-  ));
+      opId,
+      ERROR_TYPES.network,
+      reason
+    ));
 }
