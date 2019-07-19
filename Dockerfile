@@ -10,7 +10,7 @@ ENV APP_FOLDER=${APP_FOLDER_ARG}
 RUN mkdir -p ${APP_FOLDER}/frontend
 
 WORKDIR ${APP_FOLDER}
-COPY package.json package-lock.json .babelrc webpack.config.js ${APP_FOLDER}/
+COPY package.json package-lock.json .babelrc webpack.config.js .flowconfig ${APP_FOLDER}/
 RUN npm install --silent
 
 COPY ./frontend/ ${APP_FOLDER}/frontend/
