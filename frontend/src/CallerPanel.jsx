@@ -1,27 +1,12 @@
 // @flow
 
-import {Button, Grid, List, makeStyles, Paper, Typography} from "@material-ui/core";
+import {Button, Grid, List, Paper, Typography} from "@material-ui/core";
 import React from "react";
 import {API_PARAMETERS, ERROR_TYPES, fetchCallers, patchCallers} from "./api";
 import type {Caller, CallerDelta} from './Caller';
-import {EditableCaller, fromAPIObject, toAPIObject} from "./Caller";
+import EditableCaller from './EditableCaller';
 import SimpleListMenu from "./SimpleListMenu";
 
-const useStyles = makeStyles(theme => ({
-  root: {
-    flexGrow: 1,
-    maxWidth: 752,
-  },
-  demo: {
-    backgroundColor: theme.palette.background.paper,
-  },
-  title: {
-    margin: theme.spacing(4, 0, 2),
-  },
-  button: {
-    margin: theme.spacing(1)
-  }
-}));
 
 const OPTIONS = [
   {label: 'Most recent callers', api_parameter: 'last_call'},
@@ -83,9 +68,7 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
     this.timer = null;
   }
 
-  callersUpdatedByAPI = (callers: Array<Object>) => {
-    let newCallers = callers.map(fromAPIObject);
-
+  callersUpdatedByAPI = (newCallers: Array<Caller>) => {
     this.setState({
       ...this.state,
       callers: newCallers,
@@ -116,7 +99,7 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
   callerModified = (delta: CallerDelta) => {
     patchCallers(
       'update_callers',
-      [toAPIObject(delta)],
+      [delta],
       this.updateSuccessful,
       this.reportError
     )
@@ -182,7 +165,7 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
           </Grid>
           <Grid item xs={12}>
             <div>
-              <div className={useStyles.demo}>
+              <div>
                 <Paper elevation="0">
                   <List style={{maxHeight: 'calc(100vh - 250px)', overflow: "auto"}} dense={false}>
                     {this.state.callers.map(caller =>

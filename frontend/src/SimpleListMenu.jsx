@@ -1,92 +1,100 @@
-import React, {Component} from 'react';
-import {makeStyles} from '@material-ui/core/styles';
+// @flow
+
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
-import MenuItem from '@material-ui/core/MenuItem';
 import Menu from '@material-ui/core/Menu';
-import PropTypes from 'prop-types';
+import MenuItem from '@material-ui/core/MenuItem';
+import {makeStyles} from '@material-ui/core/styles';
+import React, {Component} from 'react';
 
 const useStyles = makeStyles(theme => ({
-    root: {
-        maxWidth: 360
-    },
+  root: {
+    maxWidth: 360
+  },
 }));
 
-export default class SimpleListMenu extends Component {
+type State = {
+  anchorEl: MenuItem,
+  selectedIndex: number
+};
 
-    classes = useStyles;
+type Props = {
+  options: Array<string>,
+  initial: number,
+  onChange: (index: number) => void
+};
 
-    state = {
-        anchorEl: null,
-        selectedIndex: 0
-    };
+export default class SimpleListMenu extends Component<Props, State> {
 
-    handleMenuClick = (event) => {
-        this.setState({
-            ...this.state,
-            anchorEl: event.currentTarget
-        })
-    };
+  static defaultProps = {
+    onChange: (index: number) => undefined,
+    initial: 0
+  };
 
-    handleMenuItemClick = (event, index) => {
-        this.setState({
-            selectedIndex: index,
-            anchorEl: null
-        });
+  classes = useStyles;
 
-        this.props.onChange(index);
-    };
+  state = {
+    anchorEl: null,
+    selectedIndex: this.props.initial
+  };
 
-    handleClose = () => {
-        this.setState({
-            ...this.state,
-            anchorEl: null
-        })
-    };
+  handleMenuClick = (event: Object) => {
+    this.setState({
+      ...this.state,
+      anchorEl: event.currentTarget
+    })
+  };
 
-    render() {
-        return (
-            <div className={this.classes.root}>
-                <List component="nav" aria-label="Ordering">
-                    <ListItem
-                        button
-                        aria-haspopup="true"
-                        aria-controls="lock-menu"
-                        aria-label="Show first"
-                        onClick={this.handleMenuClick}
-                        style={{padding: 0}}
-                    >
-                        <ListItemText primary="Show first" secondary={this.props.options[this.state.selectedIndex]}/>
-                    </ListItem>
-                </List>
-                <Menu
-                    id="lock-menu"
-                    anchorEl={this.state.anchorEl}
-                    keepMounted
-                    open={Boolean(this.state.anchorEl)}
-                    onClose={this.props.handleClose}>{
-                    this.props.options.map((option, index) => (
-                        <MenuItem
-                            key={option}
-                            selected={index === this.state.selectedIndex}
-                            onClick={event => this.handleMenuItemClick(event, index)}
-                        >
-                            {option}
-                        </MenuItem>
-                    ))}
-                </Menu>
-            </div>
-        );
-    };
+  handleMenuItemClick = (event: Object, index: number) => {
+    this.setState({
+      selectedIndex: index,
+      anchorEl: null
+    });
+
+    this.props.onChange(index);
+  };
+
+  handleClose = () => {
+    this.setState({
+      ...this.state,
+      anchorEl: null
+    })
+  };
+
+  render() {
+    return (
+      <div className={this.classes.root}>
+        <List component="nav" aria-label="Ordering">
+          <ListItem
+            button
+            aria-haspopup="true"
+            aria-controls="lock-menu"
+            aria-label="Show first"
+            onClick={this.handleMenuClick}
+            style={{padding: 0}}
+          >
+            <ListItemText primary="Show first" secondary={this.props.options[this.state.selectedIndex]}/>
+          </ListItem>
+        </List>
+        <Menu
+          id="lock-menu"
+          anchorEl={this.state.anchorEl}
+          keepMounted
+          open={Boolean(this.state.anchorEl)}
+          onClose={this.handleClose}>{
+          this.props.options.map((option, index) => (
+            <MenuItem
+              key={option}
+              selected={index === this.state.selectedIndex}
+              onClick={event => this.handleMenuItemClick(event, index)}
+            >
+              {option}
+            </MenuItem>
+          ))}
+        </Menu>
+      </div>
+    );
+  };
 }
 
-SimpleListMenu.propTypes = {
-    options: PropTypes.array.isRequired,
-    initial: PropTypes.number
-};
-
-SimpleListMenu.defaultProps = {
-    initial: 0,
-    onChange: () => null
-};

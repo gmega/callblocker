@@ -21,10 +21,11 @@ import {ContactPhone, Phone, Settings} from "@material-ui/icons";
 import MenuIcon from '@material-ui/icons/Menu';
 import {TimeoutID} from 'flow';
 import React from 'react'
-import {BrowserRouter, Link, Redirect, Route} from "react-router-dom";
+import {Link, Route, Redirect} from "react-router-dom";
 import type {CallerDelta} from './Caller';
 import CallerPanel from "./CallerPanel";
-import {map, weakId} from './helpers';
+import {weakId} from './helpers';
+import ComponentRoute from './Route';
 
 const drawerWidth = 240;
 
@@ -90,6 +91,9 @@ export default function NavDrawer() {
   const [message, setMessage] = React.useState(null);
   (message: ?string);
 
+  const [title, setTitle] = React.useState('No Title');
+  (title: string);
+
   function handleDrawerToggle() {
     setMobileOpen(!mobileOpen);
   }
@@ -136,6 +140,10 @@ export default function NavDrawer() {
     return errorMessages;
   }
 
+  function handleRouteActivation(routeId: string) {
+    setTitle(routeId);
+  }
+
   const drawer = (
     <div>
       <div className={classes.toolbar}/>
@@ -169,80 +177,66 @@ export default function NavDrawer() {
   return (
     <div className={classes.root}>
       <CssBaseline/>
-      <BrowserRouter>
-        {/* We put this route here to avoid having to leak the default path into
-                    the webserver config. */}
+      <AppBar position="fixed" className={classes.appBar}>
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            aria-label="Open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            className={classes.menuButton}
+          >
+            <MenuIcon/>
+          </IconButton>
+          <Typography variant="h6" noWrap>{title}</Typography>
+        </Toolbar>
+        <ErrorArea errors={errorMessages()}/>
+      </AppBar>
+      <nav className={classes.drawer} aria-label="Mailbox folders">
+        {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
+        <Hidden smUp implementation="css">
+          <Drawer
+            //container={container}
+            variant="temporary"
+            anchor={theme.direction === 'rtl' ? 'right' : 'left'}
+            open={mobileOpen}
+            onClose={handleDrawerToggle}
+            classes={{
+              paper: classes.drawerPaper,
+            }}
+            ModalProps={{
+              keepMounted: true, // Better open performance on mobile.
+            }}>
+            {drawer}
+          </Drawer>
+        </Hidden>
+        <Hidden xsDown implementation="css">
+          <Drawer
+            classes={{
+              paper: classes.drawerPaper,
+            }}
+            variant="permanent"
+            open>
+            {drawer}
+          </Drawer>
+        </Hidden>
+      </nav>
+      <main className={classes.content}>
+        <div className={classes.toolbar}/>
         <Route exact path="/" render={() => (<Redirect to="/callers"/>)}/>
-        <AppBar position="fixed" className={classes.appBar}>
-          <Toolbar>
-            <IconButton
-              color="inherit"
-              aria-label="Open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              className={classes.menuButton}
-            >
-              <MenuIcon/>
-            </IconButton>
-            <Route path="/callers" render={() => (
-              <Typography variant="h6" noWrap>
-                Recent Callers
-              </Typography>
-            )}/>
-            <Route path="/phonebook" render={() => (
-              <Typography variant="h6" noWrap>
-                Phonebook
-              </Typography>
-            )}/>
-            <Route path="/settings" render={() => (
-              <Typography variant="h6" noWrap>
-                Settings
-              </Typography>
-            )}/>
-
-          </Toolbar>
-          <ErrorArea errors={errorMessages()}/>
-        </AppBar>
-        <nav className={classes.drawer} aria-label="Mailbox folders">
-          {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-          <Hidden smUp implementation="css">
-            <Drawer
-              //container={container}
-              variant="temporary"
-              anchor={theme.direction === 'rtl' ? 'right' : 'left'}
-              open={mobileOpen}
-              onClose={handleDrawerToggle}
-              classes={{
-                paper: classes.drawerPaper,
-              }}
-              ModalProps={{
-                keepMounted: true, // Better open performance on mobile.
-              }}>
-              {drawer}
-            </Drawer>
-          </Hidden>
-          <Hidden xsDown implementation="css">
-            <Drawer
-              classes={{
-                paper: classes.drawerPaper,
-              }}
-              variant="permanent"
-              open>
-              {drawer}
-            </Drawer>
-          </Hidden>
-        </nav>
-        <main className={classes.content}>
-          <div className={classes.toolbar}/>
-          <Route path="/callers" render={() => {
-            return <CallerPanel onError={reportError} onUpdate={reportUpdate}/>
-          }}/>
-          <Snackbar
-            open={message != null}
-            message={message}
-          />
-        </main>
-      </BrowserRouter>
+        <ComponentRoute routeId="Recent Callers"
+               path="/callers"
+               onActivation={handleRouteActivation}
+               C={CallerPanel}
+               componentProps={{
+                 onError: reportError,
+                 onUpdate: reportUpdate
+               }}/>
+        <Snackbar
+          open={message != null}
+          message={message}
+        />
+      </main>
     </div>
   );
 }

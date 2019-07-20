@@ -7,6 +7,7 @@ module.exports = {
     context: __dirname,
 
     entry: './frontend/src/index.jsx',
+    devtool: '#eval-source-map',
     output: {
         path: path.resolve('./frontend/dist'),
         filename: 'index_bundle.js'

@@ -2,7 +2,8 @@
 
 import {Response} from 'flow';
 import type {Caller, CallerDelta} from './Caller';
-import {fromAPIObject, toAPIObject} from './Caller';
+
+import {camelize, snakeize} from './helpers';
 
 export const API_PARAMETERS = {
   endpoint: 'http://localhost:8000/',
@@ -13,7 +14,6 @@ export const ERROR_TYPES = {
   server: 'server_error',
   network: 'network_error'
 };
-
 
 export function fetchCallers(
   opId: string,
@@ -71,8 +71,25 @@ export function patchCallers(
         onSuccess(opId, patches);
       }
     }).catch((reason) => onError(
-      opId,
-      reason, //FIXME this is not a Response
-      ERROR_TYPES.network
-    ));
+    opId,
+    reason, //FIXME this is not a Response
+    ERROR_TYPES.network
+  ));
+}
+
+
+export function toAPIObject(caller: Caller | CallerDelta): Object {
+  if (caller.original) {
+    return snakeize({
+      fullNumber: caller.original.fullNumber,
+      ...caller
+    })
+  } else {
+    return snakeize(caller);
+  }
+}
+
+export function fromAPIObject(object: Object): Caller {
+  // We trust the API not to screw up ;-)
+  return (camelize(object): Caller);
 }
