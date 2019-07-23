@@ -8,7 +8,7 @@ services:
     restart: always
     image: postgres:alpine
     ports:
-      - "${DB_PORT:-5432}:${DB_PORT:-5432}"
+      - "5432:${DB_PORT:-5432}"
     environment:
       - POSTGRES_USER=devel
       - POSTGRES_PASSWORD=devel

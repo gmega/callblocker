@@ -2,4 +2,4 @@
 
 cd ${APP_FOLDER}
 
-pytest
+sh ./bin/wait-for.sh ${DB_HOST}:${DB_PORT} -t 120 -- pytest

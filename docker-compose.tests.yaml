@@ -15,4 +15,5 @@ services:
       - database-dev
     environment:
       - DB_HOST=database-dev
+      - DB_PORT=${DB_PORT:-5432}
     command: ['sh', '/callblocker/bin/run-tests.sh']
