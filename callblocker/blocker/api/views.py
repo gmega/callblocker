@@ -5,16 +5,17 @@ from django.db.models import Count
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
+from rest_framework.mixins import RetrieveModelMixin, ListModelMixin
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_202_ACCEPTED
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework_bulk import BulkUpdateModelMixin, BulkDestroyModelMixin
 
 from callblocker.blocker import bootstrap
-from callblocker.blocker.api.serializers import CallerSerializer
-from callblocker.blocker.models import Caller
+from callblocker.blocker.api.serializers import CallerSerializer, CallSerializer
+from callblocker.blocker.models import Caller, Call
 from callblocker.core.healthmonitor import monitor
 
 
@@ -57,6 +58,15 @@ class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
                                          ','.join(CallerViewSet.ALLOWED_ORDERINGS))
 
         return params
+
+
+class CallViewSet(RetrieveModelMixin, ListModelMixin, BulkDestroyModelMixin, GenericViewSet):
+    serializer_class = CallSerializer
+    pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        full_number = self.kwargs['full_number'].replace('-', '')
+        return Call.objects.filter(caller__full_number=full_number)
 
 
 @api_view(['GET'])

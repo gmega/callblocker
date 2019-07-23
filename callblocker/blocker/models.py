@@ -19,7 +19,7 @@ class Caller(models.Model):
     # pieces of the framework are not good at working with
     # composite keys, so having a single primary key makes
     # things much simpler.
-    full_number = models.CharField(max_length=28)
+    full_number = models.CharField(max_length=28, primary_key=True)
 
     area_code = models.CharField(max_length=8)
     number = models.CharField(max_length=20)
@@ -41,6 +41,7 @@ class Caller(models.Model):
 
 
 class Call(models.Model):
+    # Beware of https://code.djangoproject.com/ticket/25012
     caller = models.ForeignKey(Caller, on_delete=models.CASCADE)
     time = models.DateTimeField()
     blocked = models.BooleanField()

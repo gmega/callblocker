@@ -23,9 +23,8 @@ import {TimeoutID} from 'flow';
 import React from 'react'
 import {Link, Route, Redirect} from "react-router-dom";
 import type {CallerDelta} from './Caller';
-import CallerPanel from "./CallerPanel";
 import {weakId} from './helpers';
-import ComponentRoute from './Route';
+import Routes from './Routes';
 
 const drawerWidth = 240;
 
@@ -120,7 +119,7 @@ export default function NavDrawer() {
   }
 
   function reportUpdate(patches: Array<CallerDelta>) {
-    setMessage(`${patches.length} item${patches.length > 1 ? 's' : ''} updated successfully.`)
+    setMessage(`${patches.length} item${patches.length > 1 ? 's' : ''} updated successfully.`);
     setTimeout(() => setMessage(null), 3000);
   }
 
@@ -223,15 +222,10 @@ export default function NavDrawer() {
       </nav>
       <main className={classes.content}>
         <div className={classes.toolbar}/>
-        <Route exact path="/" render={() => (<Redirect to="/callers"/>)}/>
-        <ComponentRoute routeId="Recent Callers"
-               path="/callers"
-               onActivation={handleRouteActivation}
-               C={CallerPanel}
-               componentProps={{
-                 onError: reportError,
-                 onUpdate: reportUpdate
-               }}/>
+        <Routes
+          onRouteActivation={handleRouteActivation}
+          onCallerUpdate={reportUpdate}
+          onError={reportError}/>
         <Snackbar
           open={message != null}
           message={message}

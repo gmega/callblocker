@@ -60,7 +60,7 @@ Vern Murdock
 
 def generate(caller_names, n_calls):
     callers = [
-        generate_caller(name, i) for i, name in enumerate(caller_names, start=1)
+        generate_caller(name) for name in caller_names
     ]
 
     calls = []
@@ -72,15 +72,18 @@ def generate(caller_names, n_calls):
     return dump(callers + calls, Dumper=Dumper)
 
 
-def generate_caller(name, pk):
+def generate_caller(name):
     year = datetime.now().year
+
+    area_code = integer_string(2)
+    full_number = integer_string(8)
 
     instance = {
         'model': 'blocker.Caller',
-        'pk': pk,
+        'pk': f'{area_code}{full_number}',
         'fields': {
-            'area_code': integer_string(2),
-            'number': integer_string(8),
+            'area_code': area_code,
+            'number': full_number,
             'date_inserted': gen_datetime(year),
             'last_call': gen_datetime(year),
             'block': random.random() < 0.5,
@@ -118,8 +121,8 @@ def integer_string(n):
 
 def gen_datetime(year, quoted=True):
     # generate a datetime in format yyyy-mm-dd hh:mm:ss.000000
-    start = datetime(year, 1, 1, 00, 00, 00)
-    end = start + timedelta(days=365)
+    start = datetime.now()
+    end = start - timedelta(days=365)
     dt = (start + (end - start) * random.random()).replace(tzinfo=pytz.utc)
 
     # Quoting to work around https://code.djangoproject.com/ticket/18867

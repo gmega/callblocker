@@ -1,5 +1,6 @@
 // @flow
 
+
 export type Caller = {|
   areaCode: string,
   number: string,
@@ -19,3 +20,9 @@ export type CallerDelta = {|
   notes?: string;
   calls?: number;
 |};
+
+export type Call = {
+  caller: Caller,
+  blocked: boolean,
+  time: string
+}
