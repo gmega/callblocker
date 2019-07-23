@@ -23,6 +23,7 @@ USAGE
 
 wait_for() {
   for i in `seq $TIMEOUT` ; do
+    echo "Pinging $HOST:$PORT ..."
     nc -z "$HOST" "$PORT" > /dev/null 2>&1
 
     result=$?
@@ -33,6 +34,7 @@ wait_for() {
       exit 0
     fi
     sleep 1
+    echo "connection failed."
   done
   echo "Operation timed out" >&2
   exit 1
