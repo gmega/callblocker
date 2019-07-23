@@ -1,6 +1,5 @@
 // @flow
 
-
 export type Caller = {|
   areaCode: string,
   number: string,
