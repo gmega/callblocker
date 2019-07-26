@@ -2,7 +2,7 @@
 
 import React from 'react';
 import {Redirect, Route, Switch} from 'react-router-dom';
-import ComponentRoute from './ComponentRoute';
+import ComponentRoute from './components/ComponentRoute';
 import CallerPanel from './components/CallerPanel';
 import type {CallerDelta} from './types/domainTypes';
 
