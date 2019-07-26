@@ -2,8 +2,10 @@
 
 import {Button, Grid, List, Paper, Typography} from "@material-ui/core";
 import React from "react";
-import {API_PARAMETERS, ERROR_TYPES, fetchCallers, patchCallers} from "./api";
-import type {Caller, CallerDelta} from './Caller';
+import {connect} from 'react-redux';
+import {Dispatch} from 'redux';
+import {API_PARAMETERS, fetchCallers, patchCallers} from "../actions/api";
+import type {Call, Caller, CallerDelta} from '../types/domainTypes';
 import EditableCaller from './EditableCaller';
 import SimpleListMenu from "./SimpleListMenu";
 
@@ -14,53 +16,36 @@ const OPTIONS = [
   {label: 'Callers added most recently', api_parameter: 'date_inserted'}
 ];
 
-const ERROR_MESSAGES = {
-  'load_callers': {
-    [ERROR_TYPES.network]: (response) => 'Failed to fetch items from backend server. Retrying...',
-    [ERROR_TYPES.server]: (response) =>
-      `Failed to fetch items from backend server: (${response.message})`
-  },
-  'update_callers': {
-    [ERROR_TYPES.network]: (response) => 'Update operation failed (network error).',
-    [ERROR_TYPES.server]: (response) =>
-      `Update operation failed: ${response.message}`
-  }
-};
-
 const ALL = (caller) => true;
 const BLOCKED = (caller) => caller.block;
 const UNBLOCKED = (caller) => !caller.block;
 const SELECTED = (caller, selection) => selection.has(caller.fullNumber);
 
-
 type CallerPanelState = {
   selection: Set<string>,
-  callers: Array<Caller>,
   ordering: number
 };
 
 type CallerPanelProps = {
-  onError: (errorMessage: string, errorKey: string) => void,
-  onUpdate: (deltas: Array<CallerDelta>) => void
+  dispatch: Dispatch,
+  callers: Array<Caller>,
+  calls: Map<string, Array<Call>>
 }
 
 class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
 
   state = {
     selection: new Set(),
-    callers: [],
     ordering: 0
   };
 
   timer = null;
 
   componentDidMount() {
-    this.timer = setInterval(() => fetchCallers(
-      'load_callers',
-      OPTIONS[this.state.ordering].api_parameter,
-      this.callersUpdatedByAPI,
-      this.reportError
-    ), API_PARAMETERS.pollingInterval);
+    this.timer = setInterval(
+      () => this.props.dispatch(fetchCallers(OPTIONS[this.state.ordering].api_parameter)),
+      API_PARAMETERS.pollingInterval
+    );
   }
 
   componentWillUnmount() {
@@ -68,16 +53,8 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
     this.timer = null;
   }
 
-  callersUpdatedByAPI = (newCallers: Array<Caller>) => {
-    this.setState({
-      ...this.state,
-      callers: newCallers,
-      selection: this.pruneSelection(newCallers)
-    });
-  };
-
   callerCount = (predicate: (caller: Caller) => boolean) => {
-    return this.state.callers.filter(
+    return this.props.callers.filter(
       (caller) => predicate(caller) && SELECTED(caller, this.state.selection)
     ).length
   };
@@ -97,30 +74,32 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
   };
 
   callerModified = (delta: CallerDelta) => {
-    patchCallers(
-      'update_callers',
-      [delta],
-      this.updateSuccessful,
-      this.reportError
-    )
+    this.props.dispatch(patchCallers([delta]));
   };
 
   updateBlockingStatus = (block: boolean) => {
-    let selectedCallers = this.state.callers.filter((caller) => SELECTED(caller, this.state.selection));
-    let patches = selectedCallers.map((caller) => {
-      return ({
-        original: caller,
-        block: block
-      }: CallerDelta)
-    });
-
-    patchCallers('update_callers', patches, this.updateSuccessful, this.reportError)
+    let selectedCallers = this.props.callers.filter((caller) => SELECTED(caller, this.state.selection));
+    this.props.dispatch(
+      patchCallers(
+        selectedCallers.map((caller) => {
+          return ({
+            original: caller,
+            block: block
+          }: CallerDelta)
+        })
+      ));
   };
 
-  pruneSelection = (newCallers: Array<Caller>) => {
-    let newCallerIds: Set<string> = new Set(newCallers.map((caller) => caller.fullNumber));
-    let newSelection: Set<string> = new Set(this.state.selection);
+  componentWillReceiveProps(nextProps: CallerPanelProps, nextContext: any): void {
+    let currentCallers = new Set(this.props.callers.map(caller => caller.fullNumber));
+    let newCallers = new Set(nextProps.callers.map(caller => caller.fullNumber));
+    if (currentCallers !== newCallers) {
+      this.pruneSelection(newCallers);
+    }
+  }
 
+  pruneSelection = (newCallerIds: Set<string>) => {
+    let newSelection: Set<string> = new Set(this.state.selection);
     // Prunes stale IDs from selection.
     for (let selected of this.state.selection) {
       if (!newCallerIds.has(selected)) {
@@ -130,21 +109,11 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
     return newSelection;
   };
 
-  updateSuccessful = (opId: string, patches: Array<CallerDelta>) => {
-    this.props.onUpdate(patches);
-  };
-
   changeOrdering = (index: number) => {
     this.setState({
       ...this.state,
       ordering: index
     });
-  };
-
-  reportError = (opId: string, response: Response, errorType: string) => {
-    this.props.onError(
-      ERROR_MESSAGES[opId][errorType](response), opId
-    )
   };
 
   render() {
@@ -168,7 +137,7 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
               <div>
                 <Paper elevation="0">
                   <List style={{maxHeight: 'calc(100vh - 250px)', overflow: "auto"}} dense={false}>
-                    {this.state.callers.map(caller =>
+                    {this.props.callers.map(caller =>
                       <EditableCaller
                         key={caller.fullNumber}
                         caller={caller}
@@ -200,4 +169,4 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
   }
 }
 
-export default CallerPanel;
+export default connect((state) => state.apiObjects)(CallerPanel);

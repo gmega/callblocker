@@ -1,6 +1,6 @@
 // @flow
 
-import type {Caller, CallerDelta} from './Caller';
+import type {Caller, Call, CallerDelta} from '../types/domainTypes';
 import CallerEditForm from './CallerEditForm';
 import CallerListItem from './CallerListItem';
 import React from 'react';

@@ -19,12 +19,13 @@ import {
 import {makeStyles, useTheme} from '@material-ui/core/styles'
 import {ContactPhone, Phone, Settings} from "@material-ui/icons";
 import MenuIcon from '@material-ui/icons/Menu';
-import {TimeoutID} from 'flow';
 import React from 'react'
-import {Link, Route, Redirect} from "react-router-dom";
-import type {CallerDelta} from './Caller';
-import {weakId} from './helpers';
-import Routes from './Routes';
+import {connect} from 'react-redux';
+import {Link} from "react-router-dom";
+import Routes from '../Routes';
+import type {CallerDelta} from '../types/domainTypes';
+import {ErrorArea} from './ErrorArea';
+import type {StateType} from '../reducers/index';
 
 const drawerWidth = 240;
 
@@ -65,27 +66,12 @@ const useStyles = makeStyles(theme => ({
 }));
 
 
-export function ErrorArea(props: { errors: Map<string, string> }) {
-  if (props.errors.size) {
-    return (
-      <div style={{backgroundColor: '#ff7272', color: 'white', padding: '1em'}}>
-        {[...props.errors.entries()].map(([key, value]) => <div key={key}>{value}</div>)}
-      </div>
-    )
-  } else {
-    return <div></div>;
-  }
-}
-
-export default function NavDrawer() {
+function NavDrawer(props: StateType) {
   const classes = useStyles();
   const theme = useTheme();
-
+  
   const [mobileOpen, setMobileOpen] = React.useState(false);
   (mobileOpen: boolean);
-
-  const [errors, setErrors] = React.useState(new Map());
-  (errors: Map<string, { message: string, timer: TimeoutID }>);
 
   const [message, setMessage] = React.useState(null);
   (message: ?string);
@@ -97,46 +83,9 @@ export default function NavDrawer() {
     setMobileOpen(!mobileOpen);
   }
 
-  function reportError(error_message: string, error_key?: string) {
-    let id: string = error_key ? error_key : weakId();
-
-    // Has this error been reported already?
-    let oldError = errors.get(id);
-    if (oldError) {
-      // It has. Cancel timers on it or the error will be
-      // removed prematurely.
-      clearTimeout(oldError.timer);
-    }
-
-    // Sets the error (for the first time, or again)
-    // with a fresh timer.
-    let newErrors = new Map(errors);
-    newErrors.set(id, {
-      message: error_message,
-      timer: setTimeout(removeError(id), 2000)
-    });
-    setErrors(newErrors);
-  }
-
   function reportUpdate(patches: Array<CallerDelta>) {
     setMessage(`${patches.length} item${patches.length > 1 ? 's' : ''} updated successfully.`);
     setTimeout(() => setMessage(null), 3000);
-  }
-
-  function removeError(id: string) {
-    return () => {
-      let newErrors = new Map(errors);
-      newErrors.delete(id);
-      setErrors(newErrors);
-    }
-  }
-
-  function errorMessages(): Map<string, string> {
-    let errorMessages = new Map();
-    for (let [key, value] of errors.entries()) {
-      errorMessages.set(key, value.message);
-    }
-    return errorMessages;
   }
 
   function handleRouteActivation(routeId: string) {
@@ -172,7 +121,7 @@ export default function NavDrawer() {
       </List>
     </div>
   );
-
+  
   return (
     <div className={classes.root}>
       <CssBaseline/>
@@ -189,7 +138,11 @@ export default function NavDrawer() {
           </IconButton>
           <Typography variant="h6" noWrap>{title}</Typography>
         </Toolbar>
-        <ErrorArea errors={errorMessages()}/>
+        <ErrorArea errors={new Map(
+          [...props.operationStatus.entries()]
+            .filter(([key, value]) => !value.success)
+            .map(([key, value]) => [key, value.message])
+        )}/>
       </AppBar>
       <nav className={classes.drawer} aria-label="Mailbox folders">
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
@@ -225,7 +178,7 @@ export default function NavDrawer() {
         <Routes
           onRouteActivation={handleRouteActivation}
           onCallerUpdate={reportUpdate}
-          onError={reportError}/>
+          onError={() => undefined}/>
         <Snackbar
           open={message != null}
           message={message}
@@ -235,4 +188,6 @@ export default function NavDrawer() {
   );
 }
 
+const mapStateToProps = (state: StateType, ownProps?) => ({...state, ...ownProps});
 
+export default connect(mapStateToProps)(NavDrawer);

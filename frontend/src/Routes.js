@@ -2,9 +2,9 @@
 
 import React from 'react';
 import {Redirect, Route, Switch} from 'react-router-dom';
-import type {CallerDelta} from './Caller';
-import CallerPanel from './CallerPanel';
 import ComponentRoute from './ComponentRoute';
+import CallerPanel from './components/CallerPanel';
+import type {CallerDelta} from './types/domainTypes';
 
 
 export default (props: {
@@ -20,12 +20,10 @@ export default (props: {
         path="/callers"
         onActivation={props.onRouteActivation}
         C={CallerPanel}
-        componentProps={
-          {
-            onError: props.onError,
-            onUpdate: props.onCallerUpdate
-          }
-        }
+        componentProps={{
+          onError: props.onError,
+          onUpdate: props.onCallerUpdate
+        }}
       />
     </Switch>)
 }

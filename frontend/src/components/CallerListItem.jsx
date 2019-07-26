@@ -6,9 +6,9 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 import {Block, Delete, Edit, Phone} from '@material-ui/icons';
 import React from "react";
 import {isIOS} from "react-device-detect";
-import type {Caller} from './Caller';
+import type {Caller} from '../types/domainTypes';
 import moment from 'moment';
-import {formatTime} from './helpers';
+import {formatTime} from '../helpers';
 
 const useStyles = makeStyles(theme => ({
   selectedAvatar: {
@@ -42,6 +42,9 @@ export default function CallerListItem(props: {
   }
 
   function handleMouseClick() {
+    // We emit a click event only if the edit bar is active. On mobile, this means
+    // you must click twice to get a click event. On the Desktop, this will translate
+    // into a regular click as the edit bar will activate on mouse hover.
     if (editBarOpen) {
       props.onClick(props.caller);
       return;

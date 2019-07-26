@@ -20,8 +20,8 @@ export type CallerDelta = {|
   calls?: number;
 |};
 
-export type Call = {
-  caller: Caller,
+export type Call = {|
+  caller: string,
   blocked: boolean,
   time: string
-}
+|};

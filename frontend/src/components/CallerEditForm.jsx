@@ -14,7 +14,7 @@ import {
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {Block, Cancel, Phone, Save} from '@material-ui/icons';
 import React from 'react';
-import type {Caller, CallerDelta} from './Caller';
+import type {Caller, CallerDelta} from '../types/domainTypes';
 
 const useStyles = makeStyles(theme => ({
   editorContainer: {
