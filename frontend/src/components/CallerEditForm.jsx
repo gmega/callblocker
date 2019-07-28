@@ -90,15 +90,15 @@ export default function CallerEditForm(props: {
         <Box className={classes.editorContainer}>
           <TextField
             className={classes.editorItems}
-            id="description"
-            label="Description"
+            id='description'
+            label='Description'
             value={callerInfo.description}
             onChange={handleChange('description')}
           />
           <TextField
             className={classes.editorItems}
-            id="notes"
-            label="Notes"
+            id='notes'
+            label='Notes'
             value={callerInfo.notes}
             onChange={handleChange('notes')}
             multiline
@@ -106,8 +106,8 @@ export default function CallerEditForm(props: {
         </Box>
         <Box>
           <Button
-            variant="contained"
-            size="small"
+            variant='contained'
+            size='small'
             onClick={handleSaveClicked}
             className={classes.editorItems}
             style={{marginLeft: theme.spacing(2)}}
@@ -115,8 +115,8 @@ export default function CallerEditForm(props: {
             <Save style={{marginRight: theme.spacing(1)}}/>Save
           </Button>
           <Button
-            variant="contained"
-            size="small"
+            variant='contained'
+            size='small'
             className={classes.editorItems}
             onClick={handleCancelClicked}
             style={{marginLeft: theme.spacing(2)}}

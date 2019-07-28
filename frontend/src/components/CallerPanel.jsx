@@ -1,13 +1,13 @@
 // @flow
 
-import {Button, Grid, List, Paper, Typography} from "@material-ui/core";
-import React from "react";
+import {Button, Grid, List, Paper, Typography} from '@material-ui/core';
+import React from 'react';
 import {connect} from 'react-redux';
 import {Dispatch} from 'redux';
-import {API_PARAMETERS, fetchCallers, patchCallers} from "../actions/api";
+import {API_PARAMETERS, fetchCallers, patchCallers} from '../actions/api';
 import type {Call, Caller, CallerDelta} from '../types/domainTypes';
 import EditableCaller from './EditableCaller';
-import SimpleListMenu from "./SimpleListMenu";
+import SimpleListMenu from './SimpleListMenu';
 
 
 const OPTIONS = [
@@ -120,8 +120,8 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
     return (
       <div>
         <Grid container spacing={2} style={{maxWidth: '50vw', minWidth: '440px'}}>
-          <Grid container xs={6} alignItems="center" justifyContent="center">
-            <Typography variant="h6" style={{padding: "8px"}}>
+          <Grid container xs={6} alignItems='center' justifyContent='center'>
+            <Typography variant='h6' style={{padding: '8px'}}>
               Recent Callers
             </Typography>
           </Grid>
@@ -135,8 +135,8 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
           <Grid item xs={12}>
             <div>
               <div>
-                <Paper elevation="0">
-                  <List style={{maxHeight: 'calc(100vh - 250px)', overflow: "auto"}} dense={false}>
+                <Paper elevation='0'>
+                  <List style={{maxHeight: 'calc(100vh - 250px)', overflow: 'auto'}} dense={false}>
                     {this.props.callers.map(caller =>
                       <EditableCaller
                         key={caller.fullNumber}
@@ -147,18 +147,18 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
                       />)}
                   </List>
                 </Paper>
-                <Button variant="contained"
-                        color="primary"
+                <Button variant='contained'
+                        color='primary'
                         disabled={this.callerCount(BLOCKED) === 0}
                         onClick={() => this.updateBlockingStatus(false)}>
-                  {this.callerCount(ALL) > 1 ? "Allow All" : "Allow"}
+                  {this.callerCount(ALL) > 1 ? 'Allow All' : 'Allow'}
                 </Button>
-                <Button variant="contained"
-                        color="secondary"
+                <Button variant='contained'
+                        color='secondary'
                         disabled={this.callerCount(UNBLOCKED) === 0}
                         style={{margin: 20}} //FIXME fix this
                         onClick={() => this.updateBlockingStatus(true)}>
-                  {this.callerCount(ALL) > 1 ? "Block All" : "Block"}
+                  {this.callerCount(ALL) > 1 ? 'Block All' : 'Block'}
                 </Button>
               </div>
             </div>

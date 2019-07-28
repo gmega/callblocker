@@ -1,18 +1,22 @@
 // @flow
 
-import type {ComponentType, Element} from 'react';
-import {Route} from 'react-router-dom';
+import type {ComponentType} from 'react';
 import React from 'react';
+import {Route} from 'react-router-dom';
 
-export default <P>(props: {
+export default function ComponentRoute<P>(props: {
   routeId: string,
   path: string,
   onActivation: (routeId: string) => void,
   C: ComponentType<P>,
   componentProps: P
-}) => {
+}) {
   return <Route exact path={props.path} render={() => {
     props.onActivation(props.routeId);
     return <props.C {...props.componentProps}/>;
   }}/>
 }
+
+ComponentRoute.defaultProps = {
+  componentProps: {}
+};

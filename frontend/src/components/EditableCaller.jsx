@@ -1,9 +1,9 @@
 // @flow
 
-import type {Caller, Call, CallerDelta} from '../types/domainTypes';
+import React from 'react';
+import type {Caller, CallerDelta} from '../types/domainTypes';
 import CallerEditForm from './CallerEditForm';
 import CallerListItem from './CallerListItem';
-import React from 'react';
 
 export default function EditableCaller(props: {
   caller: Caller,

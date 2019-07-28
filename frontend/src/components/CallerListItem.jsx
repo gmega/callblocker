@@ -4,11 +4,11 @@ import {Avatar, Box, IconButton, ListItem, ListItemAvatar, ListItemText, Tooltip
 import {blue} from '@material-ui/core/colors';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {Block, Delete, Edit, Phone} from '@material-ui/icons';
-import React from "react";
-import {isIOS} from "react-device-detect";
-import type {Caller} from '../types/domainTypes';
 import moment from 'moment';
+import React from 'react';
+import {isIOS} from 'react-device-detect';
 import {formatTime} from '../helpers';
+import type {Caller} from '../types/domainTypes';
 
 const useStyles = makeStyles(theme => ({
   selectedAvatar: {
@@ -100,18 +100,18 @@ export default function CallerListItem(props: {
         />
         {editBarOpen ?
           <div>
-            <Tooltip title="Edit">
-              <IconButton aria-label="Edit" onClick={handleEdit}>
+            <Tooltip title='Edit'>
+              <IconButton aria-label='Edit' onClick={handleEdit}>
                 <Edit/>
               </IconButton>
             </Tooltip>
-            <Tooltip title="Delete">
-              <IconButton aria-label="Delete" onClick={handleDelete}>
+            <Tooltip title='Delete'>
+              <IconButton aria-label='Delete' onClick={handleDelete}>
                 <Delete/>
               </IconButton>
             </Tooltip>
           </div> :
-          <Typography variant="caption" color="textSecondary">
+          <Typography variant='caption' color='textSecondary'>
             {formatTime(moment(caller.lastCall))}
           </Typography>
         }

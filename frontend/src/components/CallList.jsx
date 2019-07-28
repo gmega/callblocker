@@ -2,7 +2,7 @@
 
 import {Button, Dialog, DialogActions, DialogContent} from '@material-ui/core';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import React from "react";
+import React from 'react';
 import type {Call, Caller} from '../types/domainTypes';
 
 export default (props: {
@@ -28,7 +28,7 @@ export default (props: {
         </div>
       </DialogContent>
       <DialogActions>
-        <Button onClick={props.onClose} color="primary">
+        <Button onClick={props.onClose} color='primary'>
           Close
         </Button>
       </DialogActions>

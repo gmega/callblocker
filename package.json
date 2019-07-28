@@ -30,6 +30,7 @@
     "@material-ui/icons": "^4.2.1",
     "babel-loader": "^8.0.6",
     "babel-plugin-transform-class-properties": "^6.24.1",
+    "clsx": "^1.0.4",
     "css-loader": "^3.0.0",
     "flow": "^0.2.3",
     "flow-bin": "^0.103.0",

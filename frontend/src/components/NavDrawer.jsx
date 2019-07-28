@@ -11,21 +11,19 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  Snackbar,
   Toolbar,
   Typography
-} from "@material-ui/core";
+} from '@material-ui/core';
 
 import {makeStyles, useTheme} from '@material-ui/core/styles'
-import {ContactPhone, Phone, Settings} from "@material-ui/icons";
+import {ContactPhone, Phone, Settings} from '@material-ui/icons';
 import MenuIcon from '@material-ui/icons/Menu';
 import React from 'react'
 import {connect} from 'react-redux';
-import {Link} from "react-router-dom";
-import Routes from '../Routes';
-import type {CallerDelta} from '../types/domainTypes';
-import {ErrorArea} from './ErrorArea';
+import {Link} from 'react-router-dom';
 import type {StateType} from '../reducers/index';
+import Routes from '../Routes';
+import {StatusArea} from './StatusArea';
 
 const drawerWidth = 240;
 
@@ -83,11 +81,6 @@ function NavDrawer(props: StateType) {
     setMobileOpen(!mobileOpen);
   }
 
-  function reportUpdate(patches: Array<CallerDelta>) {
-    setMessage(`${patches.length} item${patches.length > 1 ? 's' : ''} updated successfully.`);
-    setTimeout(() => setMessage(null), 3000);
-  }
-
   function handleRouteActivation(routeId: string) {
     setTitle(routeId);
   }
@@ -125,31 +118,26 @@ function NavDrawer(props: StateType) {
   return (
     <div className={classes.root}>
       <CssBaseline/>
-      <AppBar position="fixed" className={classes.appBar}>
+      <AppBar position='fixed' className={classes.appBar}>
         <Toolbar>
           <IconButton
-            color="inherit"
-            aria-label="Open drawer"
-            edge="start"
+            color='inherit'
+            aria-label='Open drawer'
+            edge='start'
             onClick={handleDrawerToggle}
             className={classes.menuButton}
           >
             <MenuIcon/>
           </IconButton>
-          <Typography variant="h6" noWrap>{title}</Typography>
+          <Typography variant='h6' noWrap>{title}</Typography>
         </Toolbar>
-        <ErrorArea errors={new Map(
-          [...props.operationStatus.entries()]
-            .filter(([key, value]) => !value.success)
-            .map(([key, value]) => [key, value.message])
-        )}/>
       </AppBar>
-      <nav className={classes.drawer} aria-label="Mailbox folders">
+      <nav className={classes.drawer} aria-label='Mailbox folders'>
         {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-        <Hidden smUp implementation="css">
+        <Hidden smUp implementation='css'>
           <Drawer
             //container={container}
-            variant="temporary"
+            variant='temporary'
             anchor={theme.direction === 'rtl' ? 'right' : 'left'}
             open={mobileOpen}
             onClose={handleDrawerToggle}
@@ -162,27 +150,22 @@ function NavDrawer(props: StateType) {
             {drawer}
           </Drawer>
         </Hidden>
-        <Hidden xsDown implementation="css">
+        <Hidden xsDown implementation='css'>
           <Drawer
             classes={{
               paper: classes.drawerPaper,
             }}
-            variant="permanent"
+            variant='permanent'
             open>
             {drawer}
           </Drawer>
         </Hidden>
       </nav>
+      <StatusArea status={props.operationStatus}/>
       <main className={classes.content}>
         <div className={classes.toolbar}/>
         <Routes
-          onRouteActivation={handleRouteActivation}
-          onCallerUpdate={reportUpdate}
-          onError={() => undefined}/>
-        <Snackbar
-          open={message != null}
-          message={message}
-        />
+          onRouteActivation={handleRouteActivation}/>
       </main>
     </div>
   );

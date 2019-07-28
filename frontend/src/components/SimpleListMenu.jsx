@@ -65,20 +65,20 @@ export default class SimpleListMenu extends Component<Props, State> {
   render() {
     return (
       <div className={this.classes.root}>
-        <List component="nav" aria-label="Ordering">
+        <List component='nav' aria-label='Ordering'>
           <ListItem
             button
-            aria-haspopup="true"
-            aria-controls="lock-menu"
-            aria-label="Show first"
+            aria-haspopup='true'
+            aria-controls='lock-menu'
+            aria-label='Show first'
             onClick={this.handleMenuClick}
             style={{padding: 0}}
           >
-            <ListItemText primary="Show first" secondary={this.props.options[this.state.selectedIndex]}/>
+            <ListItemText primary='Show first' secondary={this.props.options[this.state.selectedIndex]}/>
           </ListItem>
         </List>
         <Menu
-          id="lock-menu"
+          id='lock-menu'
           anchorEl={this.state.anchorEl}
           keepMounted
           open={Boolean(this.state.anchorEl)}
