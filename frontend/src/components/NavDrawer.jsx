@@ -71,9 +71,6 @@ function NavDrawer(props: StateType) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   (mobileOpen: boolean);
 
-  const [message, setMessage] = React.useState(null);
-  (message: ?string);
-
   const [title, setTitle] = React.useState('No Title');
   (title: string);
 

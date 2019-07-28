@@ -1,3 +1,5 @@
+// @flow
+
 import {amber, green} from '@material-ui/core/colors';
 import IconButton from '@material-ui/core/IconButton';
 import SnackbarContent from '@material-ui/core/SnackbarContent';
@@ -10,6 +12,7 @@ import WarningIcon from '@material-ui/icons/Warning';
 import clsx from 'clsx';
 import PropTypes from 'prop-types';
 import React from 'react';
+import type {Node} from 'react';
 
 const variantIcon = {
   success: CheckCircleIcon,
@@ -18,7 +21,7 @@ const variantIcon = {
   info: InfoIcon,
 };
 
-const useStyles1 = makeStyles(theme => ({
+const useStyles = makeStyles(theme => ({
   success: {
     backgroundColor: green[600],
   },
@@ -44,8 +47,13 @@ const useStyles1 = makeStyles(theme => ({
   },
 }));
 
-export function StatusSnackbarContent(props) {
-  const classes = useStyles1();
+export function StatusSnackbarContent(props: {
+  className: string,
+  message: Node,
+  onClose: () => void,
+  variant: 'success' | 'warning' | 'error' | 'info'
+}) {
+  const classes = useStyles();
   const {className, message, onClose, variant, ...other} = props;
   const Icon = variantIcon[variant];
 
@@ -69,9 +77,7 @@ export function StatusSnackbarContent(props) {
   );
 }
 
-StatusSnackbarContent.propTypes = {
-  className: PropTypes.string,
-  message: PropTypes.node,
-  onClose: PropTypes.func,
-  variant: PropTypes.oneOf(['success', 'warning', 'error', 'info']).isRequired,
+StatusSnackbarContent.defaultProps = {
+  className: '',
+  onClose: () => undefined
 };
