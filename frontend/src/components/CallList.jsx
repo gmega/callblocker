@@ -41,7 +41,7 @@ const useStyles = makeStyles(theme => ({
     marginTop: theme.spacing(1)
   },
   callerListItem: {
-    paddingBottom: theme.spacing(1)
+    paddingBottom: theme.spacing(2)
   }
 }));
 

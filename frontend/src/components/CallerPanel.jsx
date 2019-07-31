@@ -9,6 +9,9 @@ import {API_PARAMETERS, fetchCallers, fetchCalls, patchCallers} from '../actions
 import type {Call, Caller, CallerDelta} from '../types/domainTypes';
 import EditableCaller from './EditableCaller';
 import SimpleListMenu from './SimpleListMenu';
+import {isSafari, isIOS} from 'react-device-detect';
+
+const SAFARI_LOWER_BAR = 64;
 
 const OPTIONS = [
   {label: 'Most recent callers', api_parameter: 'last_call'},
@@ -109,10 +112,13 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
     this.props.dispatch(fetchCalls(caller));
   };
 
+  // Oh, Safari... you make me miserable.
+  maxListHeight = 250 + ((isSafari && isIOS) ? SAFARI_LOWER_BAR : 0);
+
   render() {
     return (
       <div>
-        <Grid container spacing={2} style={{minWidth: '350px'}}>
+        <Grid container spacing={2}>
           <Grid container xs={6} alignItems='center' justifyContent='center'>
             <Typography variant='h6' style={{padding: '8px'}}>
               Recent Callers
@@ -129,7 +135,7 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
             <div>
               <div>
                 <Paper elevation='0'>
-                  <List style={{maxHeight: 'calc(100vh - 250px)', overflow: 'auto'}} dense={false}>
+                  <List style={{maxHeight: `calc(100vh - ${this.maxListHeight}px)`, overflow: 'auto'}} dense={false}>
                     {this.props.callers.map(caller =>
                       <EditableCaller
                         key={caller.fullNumber}
