@@ -25,7 +25,6 @@ import {Link} from 'react-router-dom';
 import type {StateType} from '../reducers/index';
 import Routes from '../Routes';
 import {StatusArea} from './StatusArea';
-import Div100vh from 'react-div-100vh'
 
 const drawerWidth = 240;
 
@@ -115,9 +114,10 @@ function NavDrawer(props: StateType) {
   );
 
   return (
-    <Div100vh>
+    <Nop>
       <StatusArea status={props.operationStatus}/>
       <div className={classes.root}>
+
         <CssBaseline/>
         <AppBar position='fixed' className={classes.appBar}>
           <Toolbar>
@@ -168,7 +168,7 @@ function NavDrawer(props: StateType) {
             onRouteActivation={handleRouteActivation}/>
         </main>
       </div>
-    </Div100vh>
+    </Nop>
   );
 }
 
