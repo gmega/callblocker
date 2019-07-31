@@ -112,7 +112,7 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
   render() {
     return (
       <div>
-        <Grid container spacing={2} style={{maxWidth: '50vw', minWidth: '420px'}}>
+        <Grid container spacing={2} style={{minWidth: '350px'}}>
           <Grid container xs={6} alignItems='center' justifyContent='center'>
             <Typography variant='h6' style={{padding: '8px'}}>
               Recent Callers

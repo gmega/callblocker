@@ -4,13 +4,13 @@ import {Avatar, Box, IconButton, ListItem, ListItemAvatar, ListItemText, Tooltip
 import {blue} from '@material-ui/core/colors';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {Block, Delete, Edit, Phone} from '@material-ui/icons';
+import clsx from 'clsx';
 import moment from 'moment';
 import React from 'react';
 import {isIOS} from 'react-device-detect';
 import {formatTime} from '../helpers';
 import type {Caller} from '../types/domainTypes';
 import Nop from './Nop';
-import clsx from 'clsx';
 
 const useStyles = makeStyles(theme => ({
   selectedAvatar: {
@@ -22,6 +22,19 @@ const useStyles = makeStyles(theme => ({
     marginTop: theme.spacing(1),
     marginLeft: theme.spacing(3),
     marginRight: theme.spacing(3)
+  },
+  listItemText: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis'
+  },
+  timeOfCall: {
+    paddingLeft: theme.spacing(2)
+  },
+  unwrappable: {
+    whiteSpace: 'nowrap'
+  },
+  unshrinkable: {
+    flexShrink: '0px'
   }
 }));
 
@@ -32,6 +45,7 @@ export function SimpleCallerListItem(props: {
   selected: boolean,
   onClick: (event: Event) => void
 }) {
+
   const classes = useStyles();
 
   const caller = props.caller;
@@ -47,7 +61,9 @@ export function SimpleCallerListItem(props: {
           </Avatar>
         </ListItemAvatar>
         <ListItemText
+          secondaryTypographyProps={{className: clsx(classes.unwrappable, classes.listItemText)}}
           primary={`(${caller.areaCode}) ${caller.number}`}
+          className={classes.listItemText}
           secondary={
             `${caller.description ? caller.description : 'Unknown Caller'} - 
           ${caller.calls} call${caller.calls > 1 ? 's' : ''}`
@@ -83,6 +99,8 @@ export default function CallerListItem(props: {
   onClick: (caller: Caller) => void,
   onSelect: (caller: Caller, selected: boolean) => void
 }) {
+
+  const classes = useStyles();
 
   const [editBarOpen, setEditBarOpen] = React.useState(false);
 
@@ -154,7 +172,7 @@ export default function CallerListItem(props: {
           onClick={noClick(toggleSelected)}
           selected={props.selected}/>
         {editBarOpen ?
-          <div>
+          <div className={classes.unshrinkable}>
             <Tooltip title='Edit'>
               <IconButton aria-label='Edit' onClick={noClick(handleEdit)}>
                 <Edit/>
@@ -166,7 +184,7 @@ export default function CallerListItem(props: {
               </IconButton>
             </Tooltip>
           </div> :
-          <Typography variant='caption' color='textSecondary'>
+          <Typography variant='caption' color='textSecondary' className={clsx(classes.unwrappable, classes.timeOfCall)}>
             {formatTime(moment(caller.lastCall))}
           </Typography>
         }
