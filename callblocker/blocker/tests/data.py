@@ -109,7 +109,7 @@ def generate_calls(n, caller, call_pk_base):
             'fields': {
                 'caller': caller['pk'],
                 'time': gen_datetime(year=year),
-                'blocked': caller['fields']['block']
+                'blocked': random.random() < 0.5
             }
         } for i in range(0, n)
     ]

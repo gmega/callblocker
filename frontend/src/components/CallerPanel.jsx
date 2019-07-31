@@ -1,14 +1,14 @@
 // @flow
 
 import {Button, Grid, List, Paper, Typography} from '@material-ui/core';
+import {Map as IMap, Set as ISet} from 'immutable';
 import React from 'react';
 import {connect} from 'react-redux';
 import {Dispatch} from 'redux';
-import {API_PARAMETERS, fetchCallers, patchCallers} from '../actions/api';
+import {API_PARAMETERS, fetchCallers, fetchCalls, patchCallers} from '../actions/api';
 import type {Call, Caller, CallerDelta} from '../types/domainTypes';
 import EditableCaller from './EditableCaller';
 import SimpleListMenu from './SimpleListMenu';
-
 
 const OPTIONS = [
   {label: 'Most recent callers', api_parameter: 'last_call'},
@@ -22,20 +22,20 @@ const UNBLOCKED = (caller) => !caller.block;
 const SELECTED = (caller, selection) => selection.has(caller.fullNumber);
 
 type CallerPanelState = {
-  selection: Set<string>,
+  selection: ISet<string>,
   ordering: number
 };
 
 type CallerPanelProps = {
   dispatch: Dispatch,
   callers: Array<Caller>,
-  calls: Map<string, Array<Call>>
+  calls: IMap<string, Array<Call>>
 }
 
 class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
 
   state = {
-    selection: new Set(),
+    selection: new ISet(),
     ordering: 0
   };
 
@@ -60,16 +60,10 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
   };
 
   callerSelected = (source: Caller, toggle: boolean) => {
-    let newSelection = new Set(this.state.selection);
-    if (toggle) {
-      newSelection.add(source.fullNumber);
-    } else {
-      newSelection.delete(source.fullNumber)
-    }
-
+    let selection = this.state.selection;
     this.setState({
       ...this.state,
-      selection: newSelection
+      selection: toggle ? selection.add(source.fullNumber) : selection.delete(source.fullNumber)
     });
   };
 
@@ -91,22 +85,15 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
   };
 
   componentWillReceiveProps(nextProps: CallerPanelProps, nextContext: any): void {
-    let currentCallers = new Set(this.props.callers.map(caller => caller.fullNumber));
-    let newCallers = new Set(nextProps.callers.map(caller => caller.fullNumber));
+    let currentCallers = ISet(this.props.callers.map(caller => caller.fullNumber));
+    let newCallers = ISet(nextProps.callers.map(caller => caller.fullNumber));
     if (currentCallers !== newCallers) {
       this.pruneSelection(newCallers);
     }
   }
 
-  pruneSelection = (newCallerIds: Set<string>) => {
-    let newSelection: Set<string> = new Set(this.state.selection);
-    // Prunes stale IDs from selection.
-    for (let selected of this.state.selection) {
-      if (!newCallerIds.has(selected)) {
-        newSelection.delete(selected);
-      }
-    }
-    return newSelection;
+  pruneSelection = (newCallerIds: ISet<string>) => {
+    return this.state.selection.filter((callerId) => newCallerIds.has(callerId));
   };
 
   changeOrdering = (index: number) => {
@@ -116,10 +103,16 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
     });
   };
 
+  refreshCalls = (caller: Caller) => {
+    // Eventually we should throttle this to avoid
+    // refetching unless some time has passed.
+    this.props.dispatch(fetchCalls(caller));
+  };
+
   render() {
     return (
       <div>
-        <Grid container spacing={2} style={{maxWidth: '50vw', minWidth: '440px'}}>
+        <Grid container spacing={2} style={{maxWidth: '50vw', minWidth: '420px'}}>
           <Grid container xs={6} alignItems='center' justifyContent='center'>
             <Typography variant='h6' style={{padding: '8px'}}>
               Recent Callers
@@ -141,9 +134,11 @@ class CallerPanel extends React.Component<CallerPanelProps, CallerPanelState> {
                       <EditableCaller
                         key={caller.fullNumber}
                         caller={caller}
+                        calls={this.props.calls.get(caller.fullNumber, [])}
                         onSelect={this.callerSelected}
                         onSubmit={this.callerModified}
                         selected={this.state.selection.has(caller.fullNumber)}
+                        onDisplayCalls={(caller) => this.refreshCalls(caller)}
                       />)}
                   </List>
                 </Paper>

@@ -1,25 +1,6 @@
 // @flow
 import moment from "moment";
 
-export function map(obj: Object, fun: <T>(key: string, value: T) => T): Object {
-  return Object.entries(obj).reduce((obj, [key, value]) => {
-    obj[key] = fun(key, value);
-    return obj
-  }, {})
-}
-
-export function filter(obj: Object, predicate: <T>(key: string, value: T) => boolean =
-  (key: string, value: any) => true) {
-  return Object.entries(obj)
-    .filter(([key, value]) => predicate(key, value))
-    .reduce((obj, [key, value]) => {
-      obj[key] = value;
-      return obj;
-    }, {})
-}
-
-export const removeKey = (obj: Object, key: string) => filter(obj, (akey, value) => akey !== key);
-
 export function formatTime(callDate: moment, now: moment = null): string {
   now = now ? now : moment();
 

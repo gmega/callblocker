@@ -34,6 +34,9 @@ const useStyles = makeStyles(theme => ({
   warning: {
     backgroundColor: amber[700],
   },
+  content: {
+    flexWrap: 'nowrap'
+  },
   icon: {
     fontSize: 20,
   },
@@ -43,7 +46,7 @@ const useStyles = makeStyles(theme => ({
   },
   message: {
     display: 'flex',
-    alignItems: 'center',
+    alignItems: 'center'
   },
 }));
 
@@ -59,7 +62,7 @@ export function StatusSnackbarContent(props: {
 
   return (
     <SnackbarContent
-      className={clsx(classes[variant], className)}
+      className={clsx(classes[variant], classes.content, className)}
       aria-describedby='client-snackbar'
       message={
         <span id='client-snackbar' className={classes.message}>

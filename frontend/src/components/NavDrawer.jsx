@@ -18,6 +18,7 @@ import {
 import {makeStyles, useTheme} from '@material-ui/core/styles'
 import {ContactPhone, Phone, Settings} from '@material-ui/icons';
 import MenuIcon from '@material-ui/icons/Menu';
+import Nop from './Nop';
 import React from 'react'
 import {connect} from 'react-redux';
 import {Link} from 'react-router-dom';
@@ -67,7 +68,7 @@ const useStyles = makeStyles(theme => ({
 function NavDrawer(props: StateType) {
   const classes = useStyles();
   const theme = useTheme();
-  
+
   const [mobileOpen, setMobileOpen] = React.useState(false);
   (mobileOpen: boolean);
 
@@ -111,60 +112,63 @@ function NavDrawer(props: StateType) {
       </List>
     </div>
   );
-  
+
   return (
-    <div className={classes.root}>
-      <CssBaseline/>
-      <AppBar position='fixed' className={classes.appBar}>
-        <Toolbar>
-          <IconButton
-            color='inherit'
-            aria-label='Open drawer'
-            edge='start'
-            onClick={handleDrawerToggle}
-            className={classes.menuButton}
-          >
-            <MenuIcon/>
-          </IconButton>
-          <Typography variant='h6' noWrap>{title}</Typography>
-        </Toolbar>
-      </AppBar>
-      <nav className={classes.drawer} aria-label='Mailbox folders'>
-        {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-        <Hidden smUp implementation='css'>
-          <Drawer
-            //container={container}
-            variant='temporary'
-            anchor={theme.direction === 'rtl' ? 'right' : 'left'}
-            open={mobileOpen}
-            onClose={handleDrawerToggle}
-            classes={{
-              paper: classes.drawerPaper,
-            }}
-            ModalProps={{
-              keepMounted: true, // Better open performance on mobile.
-            }}>
-            {drawer}
-          </Drawer>
-        </Hidden>
-        <Hidden xsDown implementation='css'>
-          <Drawer
-            classes={{
-              paper: classes.drawerPaper,
-            }}
-            variant='permanent'
-            open>
-            {drawer}
-          </Drawer>
-        </Hidden>
-      </nav>
+    <Nop>
       <StatusArea status={props.operationStatus}/>
-      <main className={classes.content}>
-        <div className={classes.toolbar}/>
-        <Routes
-          onRouteActivation={handleRouteActivation}/>
-      </main>
-    </div>
+      <div className={classes.root}>
+
+        <CssBaseline/>
+        <AppBar position='fixed' className={classes.appBar}>
+          <Toolbar>
+            <IconButton
+              color='inherit'
+              aria-label='Open drawer'
+              edge='start'
+              onClick={handleDrawerToggle}
+              className={classes.menuButton}
+            >
+              <MenuIcon/>
+            </IconButton>
+            <Typography variant='h6' noWrap>{title}</Typography>
+          </Toolbar>
+        </AppBar>
+        <nav className={classes.drawer} aria-label='Mailbox folders'>
+          {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
+          <Hidden smUp implementation='css'>
+            <Drawer
+              //container={container}
+              variant='temporary'
+              anchor={theme.direction === 'rtl' ? 'right' : 'left'}
+              open={mobileOpen}
+              onClose={handleDrawerToggle}
+              classes={{
+                paper: classes.drawerPaper,
+              }}
+              ModalProps={{
+                keepMounted: true, // Better open performance on mobile.
+              }}>
+              {drawer}
+            </Drawer>
+          </Hidden>
+          <Hidden xsDown implementation='css'>
+            <Drawer
+              classes={{
+                paper: classes.drawerPaper,
+              }}
+              variant='permanent'
+              open>
+              {drawer}
+            </Drawer>
+          </Hidden>
+        </nav>
+        <main className={classes.content}>
+          <div className={classes.toolbar}/>
+          <Routes
+            onRouteActivation={handleRouteActivation}/>
+        </main>
+      </div>
+    </Nop>
   );
 }
 

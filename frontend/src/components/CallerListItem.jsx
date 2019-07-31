@@ -9,12 +9,71 @@ import React from 'react';
 import {isIOS} from 'react-device-detect';
 import {formatTime} from '../helpers';
 import type {Caller} from '../types/domainTypes';
+import Nop from './Nop';
+import clsx from 'clsx';
 
 const useStyles = makeStyles(theme => ({
   selectedAvatar: {
     backgroundColor: blue[500]
+  },
+  listItem: {
+    display: 'flex',
+    alignItems: 'center',
+    marginTop: theme.spacing(1),
+    marginLeft: theme.spacing(3),
+    marginRight: theme.spacing(3)
   }
 }));
+
+export function SimpleCallerListItem(props: {
+  wrapBox: boolean,
+  wrapBoxClassName: string,
+  caller: Caller,
+  selected: boolean,
+  onClick: (event: Event) => void
+}) {
+  const classes = useStyles();
+
+  const caller = props.caller;
+
+  function renderInner() {
+    return (
+      <Nop>
+        <ListItemAvatar onClick={props.onClick}>
+          <Avatar className={props.selected ? classes.selectedAvatar : null}>
+            {
+              caller.block ? <Block/> : <Phone/>
+            }
+          </Avatar>
+        </ListItemAvatar>
+        <ListItemText
+          primary={`(${caller.areaCode}) ${caller.number}`}
+          secondary={
+            `${caller.description ? caller.description : 'Unknown Caller'} - 
+          ${caller.calls} call${caller.calls > 1 ? 's' : ''}`
+          }
+        />
+      </Nop>
+    )
+  }
+
+  if (props.wrapBox) {
+    return (
+      <Box className={clsx(classes.listItem, props.wrapBoxClassName)}>
+        {renderInner()}
+      </Box>
+    )
+  } else {
+    return renderInner();
+  }
+}
+
+SimpleCallerListItem.defaultProps = {
+  wrapBoxClassName: '',
+  wrapBox: false,
+  selected: false,
+  onClick: () => undefined
+};
 
 export default function CallerListItem(props: {
   caller: Caller,
@@ -24,8 +83,6 @@ export default function CallerListItem(props: {
   onClick: (caller: Caller) => void,
   onSelect: (caller: Caller, selected: boolean) => void
 }) {
-
-  const classes = useStyles();
 
   const [editBarOpen, setEditBarOpen] = React.useState(false);
 
@@ -61,6 +118,13 @@ export default function CallerListItem(props: {
     props.onSelect(caller, !props.selected);
   }
 
+  function noClick(handler: () => void) {
+    return (event: Event) => {
+      event.stopPropagation();
+      handler();
+    }
+  }
+
   /*
   * Safari on iOS will screw up our onClick event on the list avatar if we install an onMouseOver handler
   * in its parent:
@@ -85,28 +149,19 @@ export default function CallerListItem(props: {
   return (
     <Box boxShadow={editBarOpen ? 1 : 0} style={{margin: '5px'}}>
       <ListItem key={caller.fullNumber} {...listItemHandlers}>
-        <ListItemAvatar onClick={toggleSelected}>
-          <Avatar className={props.selected ? classes.selectedAvatar : null}>
-            {
-              caller.block ? <Block/> : <Phone/>
-            }
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText
-          primary={`(${caller.areaCode}) ${caller.number}`}
-          secondary={
-            `${caller.description ? caller.description : 'Unknown Caller'} - ${props.caller.calls} calls`
-          }
-        />
+        <SimpleCallerListItem
+          caller={caller}
+          onClick={noClick(toggleSelected)}
+          selected={props.selected}/>
         {editBarOpen ?
           <div>
             <Tooltip title='Edit'>
-              <IconButton aria-label='Edit' onClick={handleEdit}>
+              <IconButton aria-label='Edit' onClick={noClick(handleEdit)}>
                 <Edit/>
               </IconButton>
             </Tooltip>
             <Tooltip title='Delete'>
-              <IconButton aria-label='Delete' onClick={handleDelete}>
+              <IconButton aria-label='Delete' onClick={noClick(handleDelete)}>
                 <Delete/>
               </IconButton>
             </Tooltip>

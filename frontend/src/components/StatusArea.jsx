@@ -4,21 +4,18 @@ import {Snackbar} from '@material-ui/core';
 import React from 'react';
 import type {OperationStatus} from '../actions/status';
 import {StatusSnackbarContent} from './StatusSnackbarContent';
+import {Set as ISet, Map as IMap} from 'immutable';
 
 
-export function StatusArea(props: { status: Map<string, OperationStatus> }) {
+export function StatusArea(props: { status: IMap<string, OperationStatus> }) {
 
-  const [suppressed, setSuppressed] = React.useState(new Set());
+  const [suppressed, setSuppressed] = React.useState(ISet());
 
   function suppress(key) {
-    const newState = new Set(suppressed);
-    newState.add(key);
-    setSuppressed(newState);
+    setSuppressed(suppressed.add(key));
 
     setTimeout(() => {
-      const newState = new Set(suppressed);
-      newState.delete(key);
-      setSuppressed(newState);
+      setSuppressed(suppressed.delete(key));
     }, 3000);
   }
 

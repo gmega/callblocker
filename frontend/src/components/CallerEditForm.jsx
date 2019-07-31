@@ -15,6 +15,7 @@ import makeStyles from '@material-ui/core/styles/makeStyles';
 import {Block, Cancel, Phone, Save} from '@material-ui/icons';
 import React from 'react';
 import type {Caller, CallerDelta} from '../types/domainTypes';
+import {SimpleCallerListItem} from './CallerListItem';
 
 const useStyles = makeStyles(theme => ({
   editorContainer: {
@@ -22,13 +23,6 @@ const useStyles = makeStyles(theme => ({
     alignItems: 'center',
     flexDirection: 'column',
     marginBottom: theme.spacing(2)
-  },
-  editorContainerInner: {
-    display: 'flex',
-    alignItems: 'center',
-    marginTop: theme.spacing(1),
-    marginLeft: theme.spacing(3),
-    marginRight: theme.spacing(3)
   },
   editorTypography: {
     padding: theme.spacing(2)
@@ -74,18 +68,7 @@ export default function CallerEditForm(props: {
     <Dialog open={props.open}>
       <DialogContent>
         <Box className={classes.editorContainerInner}>
-          <ListItemAvatar>
-            <Avatar>
-              {props.caller.block ? <Block/> : <Phone/>}
-            </Avatar>
-          </ListItemAvatar>
-          <ListItemText
-            primary={`(${props.caller.areaCode}) ${props.caller.number}`}
-            secondary={
-              `${props.caller.description ? props.caller.description : 'Unknown Caller'} - ${
-                props.caller.calls} ${(props.caller.calls === 1) ? 'call' : 'calls'}`
-            }
-          />
+          <SimpleCallerListItem caller={props.caller} wrapBox/>
         </Box>
         <Box className={classes.editorContainer}>
           <TextField

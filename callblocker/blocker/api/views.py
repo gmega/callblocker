@@ -66,7 +66,7 @@ class CallViewSet(RetrieveModelMixin, ListModelMixin, BulkDestroyModelMixin, Gen
 
     def get_queryset(self):
         full_number = self.kwargs['full_number'].replace('-', '')
-        return Call.objects.filter(caller__full_number=full_number)
+        return Call.objects.filter(caller__full_number=full_number).order_by('-time')
 
 
 @api_view(['GET'])
