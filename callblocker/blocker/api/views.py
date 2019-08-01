@@ -1,7 +1,10 @@
 import asyncio
 from typing import Dict, Any
 
-from django.db.models import Count
+from django.contrib.postgres.search import TrigramSimilarity
+from django.db.models import Count, Value, FloatField
+from django.db.models import Q
+from django.db.models.functions import Greatest
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
@@ -20,8 +23,8 @@ from callblocker.core.healthmonitor import monitor
 
 
 class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
-    ALLOWED_ORDERINGS = frozenset(['calls', 'date_inserted', 'last_call'])
-    DEFAULT_ORDERING = ['calls']
+    ALLOWED_ORDERINGS = frozenset(['calls', 'date_inserted', 'last_call', 'none'])
+    NO_ORDERING = ['none']
 
     serializer_class = CallerSerializer
     pagination_class = LimitOffsetPagination
@@ -29,15 +32,49 @@ class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
 
     def get_queryset(self):
         args = self._get_params()
+        return self._order(
+            self._query(
+                self._filter_blocked(
+                    Caller.objects.annotate(calls=Count('call')), args
+                ), args
+            ), args
+        )
 
-        queryset = Caller.objects.annotate(calls=Count('call'))
+    @staticmethod
+    def _query(queryset, args):
+        text = args.get('text')
+        if not text:
+            # If no text search, annotates text_score with a 0.0 so that the serializer won't complain.
+            # This is because restframework has no optional fields by design:
+            #
+            #   https://github.com/encode/django-rest-framework/issues/988
+            #
+            # and dealing with them in our context would just be a complexity hassle.
+            return queryset.annotate(text_score=Value(0.0, output_field=FloatField()))
 
-        # Filter out blocked or non-blocked numbers.
-        if args.get('block_status') is not None:
-            queryset = queryset.filter(block=args['block_status'])
+        text = text[0]
+        return (
+            queryset.filter(
+                Q(full_number__trigram_similar=text) |
+                Q(description__trigram_similar=text)
+            ).annotate(
+                # We just take the most similar field. Hopefully this will cut it.
+                text_score=Greatest(TrigramSimilarity('full_number', text), TrigramSimilarity('description', text))
+            ).order_by(
+                '-text_score'
+            )
+        )
 
+    @staticmethod
+    def _order(queryset, args):
         # Ordering.
-        return queryset.order_by('-%s' % args['ordering'])
+        ordering = args['ordering']
+        return queryset.order_by('-%s' % args['ordering']) if ordering is not 'none' else queryset
+
+    @staticmethod
+    def _filter_blocked(queryset, args):
+        return queryset.filter(block=args['block_status']) \
+            if args.get('block_status') is not None else queryset
 
     def get_object(self):
         full_number = self.kwargs['full_number'].replace('-', '')
@@ -52,7 +89,7 @@ class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
 
     def _get_params(self) -> Dict[str, Any]:
         params = dict(self.request.query_params)
-        params['ordering'] = params.get('ordering', CallerViewSet.DEFAULT_ORDERING)[0]
+        params['ordering'] = params.get('ordering', CallerViewSet.NO_ORDERING)[0]
         if params['ordering'] not in CallerViewSet.ALLOWED_ORDERINGS:
             raise ValidationError(detail='Ordering parameter must be one of: %s' %
                                          ','.join(CallerViewSet.ALLOWED_ORDERINGS))

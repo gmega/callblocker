@@ -48,3 +48,27 @@ def test_retrieves_calls(api_client):
         assert caller_call["caller"] == caller_with_calls["full_number"]
 
 
+@pytest.mark.django_db
+def test_retrieves_caller_by_name_prefix(api_client):
+    callers = api_client.get('/api/callers/?text=Mard&limit=1000').json()['results']
+    callers = [caller['description'] for caller in callers]
+
+    first = callers[0]
+    top_three = set(callers[1:3])
+
+    # The first result has to be Mardell
+    # Lesage as s/he's the only one with this prefix.
+    assert first == 'Mardell Lesage'
+
+    # These two may be either in second or third place, but they have to be here.
+    assert 'Marinda Stgeorge' in top_three
+    assert 'Margene Calzada' in top_three
+
+
+@pytest.mark.django_db
+def test_retrieves_caller_by_name_fragment(api_client):
+    callers = api_client.get('/api/callers/?text=rdel&limit=1000').json()['results']
+    callers = [caller['description'] for caller in callers]
+
+    first = callers[0]
+    assert first == 'Mardell Lesage'

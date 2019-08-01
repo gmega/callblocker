@@ -31,6 +31,7 @@ class CallerSerializer(ModelSerializer, BulkSerializerMixin):
     date_inserted = serializers.DateTimeField(read_only=True)
     last_call = serializers.DateTimeField(read_only=True)
     calls = serializers.IntegerField(read_only=True)
+    text_score = serializers.FloatField(read_only=True)
 
     class Meta:
         list_serializer_class = PatchedBulkListSerializer
@@ -47,5 +48,6 @@ class CallerSerializer(ModelSerializer, BulkSerializerMixin):
             'description',
             'notes',
             'source',
-            'calls'
+            'calls',
+            'text_score'
         ]

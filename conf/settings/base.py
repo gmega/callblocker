@@ -19,14 +19,21 @@ def bool_env(var, default):
     return environ.get(var, default).strip().lower() == 'true'
 
 
-# Modem and telephone provider configuration.
-MODEM_DEVICE = '/dev/ttyACM0'
-MODEM_BAUD = 115200
-MODEM_DEBUG = bool_env('MODEM_DEBUG', 'False')
-MODEM_USE_FAKE = bool_env('MODEM_USE_FAKE', 'False')
-
-MODEM_TELCO = 'Vivo'
+#: Modem model.
 MODEM_TYPE = 'CX930xx'
+#: Modem device file.
+MODEM_DEVICE = '/dev/ttyACM0'
+#: Device baud rate.
+MODEM_BAUD = 115200
+#: Enable modem debugging.
+MODEM_DEBUG = bool_env('MODEM_DEBUG', 'False')
+#: Use fake modem (will ignore MODEM_DEVICE).
+MODEM_USE_FAKE = bool_env('MODEM_USE_FAKE', 'False')
+#: Telecom operator.
+MODEM_TELCO = 'Vivo'
+
+#: API similarity threshold for trigram-similarity-based text searches.
+TRGM_SIM_THRESHOLD = 0.1
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -46,6 +53,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.postgres',
     'corsheaders',
     'rest_framework',
     'callblocker.blocker'
@@ -119,4 +127,3 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'frontend/dist/static/')
-
