@@ -9,8 +9,10 @@ logger = logging.getLogger(__name__)
 def handle_connection(**kwargs):
     with kwargs['connection'].cursor() as cursor:
         # Ideally, we'd do this as a migration. But set_limit has to be set on a session basis, so we
-        # have to do it here. But then makemigrations will trip when it tries to create a connection and
-        # we call set_limit without pg_trgm. So we have no choice.
+        # have to do it here. But then 'manage.py migrate' will trip when it tries to create a connection and
+        # calls set_limit before having created pg_trgm. So we have no choice but to probe if the extension
+        # has been installed at every connection attempt. We use a long connection life (we expect our DB
+        # to be essentially private) so performance should not be a problem.
         try:
             logger.info('installing the pg_trgm extension')
             cursor.execute('CREATE EXTENSION pg_trgm')

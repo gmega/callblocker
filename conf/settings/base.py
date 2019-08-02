@@ -37,6 +37,10 @@ MODEM_TELCO = 'Vivo'
 #: in autocomplete.
 TRGM_SIM_THRESHOLD = 0.05
 
+#: How long to keep DB connections open. Given the private nature of our database, it makes
+#: sense to hold on to them as much as possible.
+DB_CONN_MAX_AGE = 600
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

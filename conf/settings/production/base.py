@@ -21,6 +21,7 @@ DATABASES = {
         'USER': environ['DB_USER'],
         'PASSWORD': environ['DB_PASSWORD'],
         'HOST': environ['DB_HOST'],
-        'PORT': environ['DB_PORT']
+        'PORT': environ['DB_PORT'],
+        'CONN_MAX_AGE': DB_CONN_MAX_AGE
     }
 }
