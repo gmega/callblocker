@@ -50,7 +50,7 @@ def test_retrieves_calls(api_client):
 
 @pytest.mark.django_db
 def test_retrieves_caller_by_name_prefix(api_client):
-    callers = api_client.get('/api/callers/?text=Mard&limit=1000').json()['results']
+    callers = api_client.get('/api/callers/?text=Mard&limit=1000&ordering=text_score').json()['results']
     callers = [caller['description'] for caller in callers]
 
     first = callers[0]
@@ -67,8 +67,18 @@ def test_retrieves_caller_by_name_prefix(api_client):
 
 @pytest.mark.django_db
 def test_retrieves_caller_by_name_fragment(api_client):
-    callers = api_client.get('/api/callers/?text=rdel&limit=1000').json()['results']
+    callers = api_client.get('/api/callers/?text=rdel&limit=1000&ordering=text_score').json()['results']
     callers = [caller['description'] for caller in callers]
 
     first = callers[0]
     assert first == 'Mardell Lesage'
+
+
+@pytest.mark.django_db
+def test_retrieves_caller_by_single_character_search(api_client):
+    character = 'm'
+
+    callers = api_client.get(f'/api/callers/?text={character}&limit=1000').json()['results']
+    assert len(callers) > 0
+    for caller in callers:
+        assert character in caller['description'].lower()

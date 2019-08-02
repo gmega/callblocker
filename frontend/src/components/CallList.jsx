@@ -1,47 +1,21 @@
 // @flow
 
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  makeStyles,
-  Typography
-} from '@material-ui/core';
+import {Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, makeStyles} from '@material-ui/core';
 import {blue} from '@material-ui/core/colors';
 import DialogTitle from '@material-ui/core/DialogTitle';
-import {CallReceived, Cancel} from '@material-ui/icons';
-import moment from 'moment';
 import React from 'react';
-import {isMobile} from 'react-device-detect';
-import {formatTime} from '../helpers';
 import type {Call, Caller} from '../types/domainTypes';
 import {SimpleCallerListItem} from './CallerListItem';
+import CallListItem from './CallListItem';
 
 const useStyles = makeStyles(theme => ({
-  selectedAvatar: {
-    backgroundColor: blue[500]
-  },
-  selectedListItem: {
-    backgroundColor: '#AFB9FF'
-  },
-  listItem: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: theme.spacing(1)
-  },
-  listItemIcon: {
-    marginRight: theme.spacing(2)
+  callListSeparator: {
+    paddingBottom: theme.spacing(2)
   },
   spinner: {
     display: 'flex',
     justifyContent: 'center',
     marginTop: theme.spacing(1)
-  },
-  callerListItem: {
-    paddingBottom: theme.spacing(2)
   }
 }));
 
@@ -73,7 +47,7 @@ export function CallList(props: {
         props.calls.length > 0 ?
           <DialogContent> {
             props.calls.map(call => {
-              return <CallListItem call={call}/>
+              return <CallListItem key={call.time} call={call}/>
             })
           }
           </DialogContent> :
@@ -88,29 +62,5 @@ export function CallList(props: {
         </Button>
       </DialogActions>
     </Dialog>
-  )
-}
-
-function CallListItem(props: { call: Call }) {
-
-  const classes = useStyles();
-
-  const [isSelected, setSelected] = React.useState(false);
-
-  const hoverHandlers = isMobile ? {} : {
-    onMouseOver: () => setSelected(true),
-    onMouseLeave: () => setSelected(false)
-  };
-
-  return (
-    <div className={isSelected ? classes.selectedListItem : ''} {...hoverHandlers}>
-      <div className={classes.listItem}>
-        {props.call.blocked ?
-          <Cancel className={classes.listItemIcon} htmlColor='#792E33' fontSize='large'/> :
-          <CallReceived className={classes.listItemIcon} htmlColor='green' fontSize='large'/>}
-        <Typography variant='caption' color='textSecondary'>
-          {props.call.blocked ? 'blocked' : 'received'} {formatTime(moment(props.call.time))}</Typography>
-      </div>
-    </div>
   )
 }

@@ -23,8 +23,9 @@ from callblocker.core.healthmonitor import monitor
 
 
 class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
-    ALLOWED_ORDERINGS = frozenset(['calls', 'date_inserted', 'last_call', 'none'])
-    NO_ORDERING = ['none']
+    ALLOWED_ORDERINGS = frozenset(['description', 'calls', 'date_inserted', 'last_call', 'text_score'])
+    ASCENDING_ORDERINGS = frozenset(['description'])
+    DEFAULT_ORDERING = ['last_call']
 
     serializer_class = CallerSerializer
     pagination_class = LimitOffsetPagination
@@ -60,8 +61,6 @@ class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
             ).annotate(
                 # We just take the most similar field. Hopefully this will cut it.
                 text_score=Greatest(TrigramSimilarity('full_number', text), TrigramSimilarity('description', text))
-            ).order_by(
-                '-text_score'
             )
         )
 
@@ -69,7 +68,8 @@ class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
     def _order(queryset, args):
         # Ordering.
         ordering = args['ordering']
-        return queryset.order_by('-%s' % args['ordering']) if ordering is not 'none' else queryset
+        ascending = ordering in CallerViewSet.ASCENDING_ORDERINGS
+        return queryset.order_by(f'{"-" if not ascending else ""}{ordering}')
 
     @staticmethod
     def _filter_blocked(queryset, args):
@@ -89,7 +89,7 @@ class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
 
     def _get_params(self) -> Dict[str, Any]:
         params = dict(self.request.query_params)
-        params['ordering'] = params.get('ordering', CallerViewSet.NO_ORDERING)[0]
+        params['ordering'] = params.get('ordering', CallerViewSet.DEFAULT_ORDERING)[0]
         if params['ordering'] not in CallerViewSet.ALLOWED_ORDERINGS:
             raise ValidationError(detail='Ordering parameter must be one of: %s' %
                                          ','.join(CallerViewSet.ALLOWED_ORDERINGS))

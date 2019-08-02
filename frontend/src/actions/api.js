@@ -36,9 +36,19 @@ export const callsFetchSuccess = (caller: Caller, calls: Array<Call>) => ({
   calls: calls
 }: CallsFetchSuccess);
 
+export const CLEAR_CACHE = 'CLEAR_CACHE';
+export type ClearCache = {|
+  type: 'CLEAR_CACHE'
+|}
+
+export const clearCache = () => ({
+  type: 'CLEAR_CACHE'
+}: ClearCache);
+
 export type ApiAction =
   CallersFetchSuccess |
-  CallsFetchSuccess;
+  CallsFetchSuccess |
+  ClearCache;
 
 const ERROR_TYPES = {
   response: 'response',
@@ -59,11 +69,12 @@ const ERROR_MESSAGES = {
 };
 
 export function fetchCallers(
-  ordering: 'last_call' | 'calls' | 'date_inserted' | 'alphabetical' = 'last_call'
+  ordering: 'last_call' | 'calls' | 'date_inserted' | 'description' | 'text_score' = 'last_call',
+  text: ?string
 ) {
   return (dispatch: Dispatch) =>
     fetchObjects(
-      fetch(`${API_PARAMETERS.endpoint}api/callers/?ordering=${ordering}`),
+      fetch(`${API_PARAMETERS.endpoint}api/callers/?ordering=${ordering}${text ? `&text=${text}` : ''}`),
       'fetchCallers',
       (object: Object) => (camelize(object): Caller),
       (callers) => dispatch(callersFetchSuccess(callers)),

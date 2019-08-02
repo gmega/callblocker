@@ -32,8 +32,10 @@ MODEM_USE_FAKE = bool_env('MODEM_USE_FAKE', 'False')
 #: Telecom operator.
 MODEM_TELCO = 'Vivo'
 
-#: API similarity threshold for trigram-similarity-based text searches.
-TRGM_SIM_THRESHOLD = 0.1
+#: API similarity threshold for trigram-similarity-based text searches. It has to be set
+#: to low as we'll otherwise miss searches ,such as single characters, which are common
+#: in autocomplete.
+TRGM_SIM_THRESHOLD = 0.05
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
