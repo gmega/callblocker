@@ -1,6 +1,9 @@
 import json
 
 import pytest
+from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
+
+from callblocker.blocker.models import Source
 
 
 @pytest.mark.django_db
@@ -82,3 +85,31 @@ def test_retrieves_caller_by_single_character_search(api_client):
     assert len(callers) > 0
     for caller in callers:
         assert character in caller['description'].lower()
+
+
+@pytest.mark.django_db
+def test_post_creates_resource(api_client):
+    response = api_client.post('/api/callers/', data=json.dumps({
+        'area_code': '11',
+        'number': '23456789'
+    }), content_type='application/json')
+
+    assert response.status_code == HTTP_201_CREATED
+
+    caller = api_client.get('/api/callers/11-23456789.json').json()
+    assert caller['full_number'] == '1123456789'
+
+
+@pytest.mark.django_db
+def test_post_disallows_duplicate(api_client):
+    caller = {
+        'area_code': '11',
+        'number': '23456789'
+    }
+
+    response = api_client.post('/api/callers/', data=json.dumps(caller), content_type='application/json')
+    assert response.status_code == HTTP_201_CREATED
+
+    response = api_client.post('/api/callers/', data=json.dumps(caller), content_type='application/json')
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()['full_number'][0] == 'This field must be unique.'

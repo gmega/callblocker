@@ -17,8 +17,8 @@ from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework_bulk import BulkUpdateModelMixin, BulkDestroyModelMixin
 
 from callblocker.blocker import bootstrap
-from callblocker.blocker.api.serializers import CallerSerializer, CallSerializer
-from callblocker.blocker.models import Caller, Call
+from callblocker.blocker.api.serializers import CallerSerializer, CallSerializer, CallerPOSTSerializer, SourceSerializer
+from callblocker.blocker.models import Caller, Call, Source
 from callblocker.core.healthmonitor import monitor
 
 
@@ -27,9 +27,14 @@ class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
     ASCENDING_ORDERINGS = frozenset(['description'])
     DEFAULT_ORDERING = ['last_call']
 
-    serializer_class = CallerSerializer
     pagination_class = LimitOffsetPagination
     lookup_value_regex = r'(?P<full_number>[0-9\-]+)'
+
+    def get_serializer_class(self):
+        # Dispatch to the right serializer based on the verb.
+        return (
+            CallerSerializer if self.request.method != 'POST' else CallerPOSTSerializer
+        )
 
     def get_queryset(self):
         args = self._get_params()
@@ -104,6 +109,11 @@ class CallViewSet(RetrieveModelMixin, ListModelMixin, BulkDestroyModelMixin, Gen
     def get_queryset(self):
         full_number = self.kwargs['full_number'].replace('-', '')
         return Call.objects.filter(caller__full_number=full_number).order_by('-time')
+
+
+class SourceViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
+    serializer_class = SourceSerializer
+    queryset = Source.objects.all()
 
 
 @api_view(['GET'])

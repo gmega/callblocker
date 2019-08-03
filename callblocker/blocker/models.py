@@ -24,7 +24,10 @@ class Caller(models.Model):
     area_code = models.CharField(max_length=8)
     number = models.CharField(max_length=20)
     date_inserted = models.DateTimeField(auto_now_add=True)
-    last_call = models.DateTimeField(auto_now_add=True)
+
+    # We don't auto-add last_call as a caller may be entered
+    # manually. In this case, it has no last call.
+    last_call = models.DateTimeField(null=True)
 
     block = models.BooleanField(default=False)
 

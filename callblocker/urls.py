@@ -32,6 +32,11 @@ bulk_router.register(
     basename='caller'
 )
 
+bulk_router.register(
+    r'sources',
+    api_views.SourceViewSet
+)
+
 nested_router = NestedSimpleRouter(bulk_router, r'callers', lookup='caller')
 nested_router.register(
     r'calls',

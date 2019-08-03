@@ -1,4 +1,7 @@
+from functools import reduce
+
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import SkipField, Field
 from rest_framework.settings import api_settings
 from rest_framework.utils import html
 from rest_framework_bulk import BulkListSerializer
@@ -54,3 +57,33 @@ class PatchedBulkListSerializer(BulkListSerializer):
             raise ValidationError(errors)
 
         return ret
+
+
+class GeneratedCharField(Field):
+
+    def __init__(self, fields, fun=lambda x, y: x + y, **kwargs):
+        # Generated fields are never required. In fact they should not be present
+        # in the data.
+        self.fields = fields
+        self.fun = fun
+        kwargs['required'] = False
+        super().__init__(**kwargs)
+
+    def get_value(self, dictionary):
+        return {
+            key: dictionary.get(key)
+            for key in self.fields
+        }
+
+    def to_internal_value(self, data):
+        values = []
+        for field in self.fields:
+            value = data.get(field)
+            if not isinstance(value, str):
+                raise ValidationError(f'Field {field} must be a string but is a {str(type(value))}')
+            values.append(value)
+
+        return reduce(self.fun, values, '')
+
+    def to_representation(self, value):
+        return value
