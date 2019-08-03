@@ -4,7 +4,7 @@ import {Box, Button, Dialog, DialogContent, TextField, useTheme} from '@material
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {Cancel, Save} from '@material-ui/icons';
 import React from 'react';
-import type {Caller, CallerDelta} from '../types/domainTypes';
+import type {Caller, CallerDelta, NewCaller} from '../types/domainTypes';
 import {SimpleCallerListItem} from './CallerListItem';
 
 const useStyles = makeStyles(theme => ({
@@ -23,21 +23,22 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function CallerEditForm(props: {
-  caller: Caller,
+export default function CallerNewForm(props: {
   open: boolean,
-  onSubmit: (delta: CallerDelta) => void,
-  onCancel: (caller: Caller) => void
+  onSubmit: (delta: NewCaller) => void,
+  onCancel: () => void
 }) {
 
   const classes = useStyles();
   const theme = useTheme();
 
   const [callerInfo, setCallerInfo] = React.useState(({
-    original: props.caller,
-    description: props.caller.description,
-    notes: props.caller.notes
-  }: CallerDelta));
+    areaCode: '',
+    number: '',
+    block: false,
+    description: '',
+    notes: ''
+  }: NewCaller));
 
   const handleChange = fieldId => content => {
     setCallerInfo({
@@ -51,20 +52,34 @@ export default function CallerEditForm(props: {
   }
 
   function handleCancelClicked() {
-    props.onCancel(props.caller);
+    props.onCancel();
   }
 
   return (
     <Dialog open={props.open}>
       <DialogContent>
         <Box className={classes.editorContainerInner}>
-          <SimpleCallerListItem caller={props.caller} wrapBox/>
+          <SimpleCallerListItem caller={callerInfo} wrapBox/>
         </Box>
         <Box className={classes.editorContainer}>
           <TextField
             className={classes.editorItems}
+            id='areaCode'
+            label='Area Code'
+            value={callerInfo.areaCode}
+            onChange={handleChange('areaCode')}
+          />
+          <TextField
+            className={classes.editorItems}
+            id='number'
+            label='Number'
+            value={callerInfo.number}
+            onChange={handleChange('number')}
+          />
+          <TextField
+            className={classes.editorItems}
             id='description'
-            label='Description'
+            label='Name'
             value={callerInfo.description}
             onChange={handleChange('description')}
           />
@@ -102,9 +117,7 @@ export default function CallerEditForm(props: {
   )
 }
 
-CallerEditForm.defaultProps = {
-  description: '',
-  notes: '',
-  onSubmit: (delta: CallerDelta) => undefined,
-  onCancel: (caller: Caller) => undefined
+CallerNewForm.defaultProps = {
+  onSubmit: (caller: NewCaller) => undefined,
+  onCancel: () => undefined
 };

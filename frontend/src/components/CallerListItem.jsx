@@ -9,7 +9,7 @@ import moment from 'moment';
 import React from 'react';
 import {isIOS} from 'react-device-detect';
 import {formatTime} from '../helpers';
-import type {Caller} from '../types/domainTypes';
+import type {Caller, NewCaller} from '../types/domainTypes';
 import Nop from './Nop';
 
 const useStyles = makeStyles(theme => ({
@@ -41,7 +41,7 @@ const useStyles = makeStyles(theme => ({
 export function SimpleCallerListItem(props: {
   wrapBox: boolean,
   wrapBoxClassName: string,
-  caller: Caller,
+  caller: Caller | NewCaller,
   selected: boolean,
   onClick: (event: Event) => void
 }) {
@@ -49,6 +49,17 @@ export function SimpleCallerListItem(props: {
   const classes = useStyles();
 
   const caller = props.caller;
+
+  function renderCallSummary() {
+    return (
+      `${caller.description ? caller.description : 'Unknown Caller'} - ` +
+      (
+        !caller.calls ?
+          'never called.' :
+          `${caller.calls} call${caller.calls > 1 ? 's' : ''}`
+      )
+    )
+  }
 
   function renderInner() {
     return (
@@ -62,12 +73,9 @@ export function SimpleCallerListItem(props: {
         </ListItemAvatar>
         <ListItemText
           secondaryTypographyProps={{className: clsx(classes.unwrappable, classes.listItemText)}}
-          primary={`(${caller.areaCode}) ${caller.number}`}
+          primary={`(${caller.areaCode || 'XX'}) ${caller.number || 'XXXXXXXX'}`}
           className={classes.listItemText}
-          secondary={
-            `${caller.description ? caller.description : 'Unknown Caller'} - 
-          ${caller.calls} call${caller.calls > 1 ? 's' : ''}`
-          }
+          secondary={renderCallSummary()}
         />
       </Nop>
     )

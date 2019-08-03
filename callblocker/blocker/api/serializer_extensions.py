@@ -62,10 +62,10 @@ class PatchedBulkListSerializer(BulkListSerializer):
 class GeneratedCharField(Field):
 
     def __init__(self, fields, fun=lambda x, y: x + y, **kwargs):
-        # Generated fields are never required. In fact they should not be present
-        # in the data.
         self.fields = fields
         self.fun = fun
+        # Generated fields are never required. In fact they should not be present
+        # in the data.
         kwargs['required'] = False
         super().__init__(**kwargs)
 

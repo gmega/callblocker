@@ -4,7 +4,7 @@ import {Promise, Response} from 'flow';
 import {Dispatch} from 'react-redux';
 
 import {camelize, snakeize} from '../helpers';
-import type {Call, Caller, CallerDelta} from '../types/domainTypes';
+import type {Call, Caller, CallerDelta, NewCaller} from '../types/domainTypes';
 import {reportStatus} from './status';
 
 export const API_PARAMETERS = {
@@ -68,6 +68,25 @@ const ERROR_MESSAGES = {
   }
 };
 
+export function createCaller(caller: NewCaller) {
+  return (dispatch: Dispatch) =>
+    writeObjects(
+      fetch(
+        `${API_PARAMETERS.endpoint}api/callers/`,
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          method: 'POST',
+          body: JSON.stringify(toAPIObject(caller))
+        }
+      ),
+      'createCaller',
+      'Caller added successfully.',
+      dispatch
+    )
+}
+
 export function fetchCallers(
   ordering: 'last_call' | 'calls' | 'date_inserted' | 'description' | 'text_score' = 'last_call',
   text: ?string
@@ -98,7 +117,7 @@ export function patchCallers(
         }
       ),
       'patchCallers',
-      patches.length,
+      `${patches.length} item(s) updated successfully.`,
       dispatch
     );
 }
@@ -156,7 +175,7 @@ function fetchObjects<I, R>(
 function writeObjects(
   requestPromise: Promise,
   operationId: string,
-  nItems: number,
+  successMessage: string,
   dispatch: Dispatch
 ): Promise<Response> {
   return requestPromise
@@ -171,7 +190,7 @@ function writeObjects(
       } else {
         dispatch(reportStatus(
           operationId,
-          `${nItems} updated successfully.`,
+          successMessage,
           true,
           3000
         ));
@@ -188,7 +207,7 @@ function writeObjects(
     );
 }
 
-export function toAPIObject(caller: Caller | CallerDelta | Call): Object {
+export function toAPIObject(caller: Caller | CallerDelta | NewCaller | Call): Object {
   if (caller.original) {
     return snakeize({
       fullNumber: caller.original.fullNumber,
