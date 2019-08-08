@@ -1,10 +1,12 @@
 // @flow
 
-import {Button, List, Paper} from '@material-ui/core';
+import {Button, CircularProgress, List, Paper} from '@material-ui/core';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {Map as IMap, Set as ISet} from 'immutable';
 import React from 'react';
 import {isIOS, isSafari} from "react-device-detect";
+import type {AsyncList} from '../actions/api';
+import {EMPTY_ASYNC_LIST, renderAsyncList} from '../actions/api';
 import type {Call, Caller, CallerDelta} from '../types/domainTypes';
 import EditableCaller from './EditableCaller';
 
@@ -25,16 +27,40 @@ const BLOCKED = (caller) => caller.block;
 const UNBLOCKED = (caller) => !caller.block;
 const SELECTED = (caller, selection) => selection.has(caller.fullNumber);
 
-type CallerListProps = {|
-  callers: Array<Caller>,
-  calls: IMap<string, Array<Call>>,
+type BaseCallerListProps = {|
+  calls: IMap<string, AsyncList<Call>>,
   onCallerEdit: (delta: Array<CallerDelta>) => void,
   onSelectionChange: (selection: ISet<string>) => void,
   onCallDisplay: (caller: Caller) => void
 |};
 
+type CallerListProps = {|
+  callers: AsyncList<Caller>,
+  ...BaseCallerListProps
+|}
 
 export default function CallerList(props: CallerListProps) {
+  return renderAsyncList(
+    props.callers,
+    () => (
+      <div>
+        <CircularProgress/>
+      </div>
+    ),
+    (callers: Array<Caller>) => {
+      // $FlowIgnore
+      const wrapped = {callers: callers, ...props};
+      return <CallerListInner {...wrapped}/>
+    }
+  );
+}
+
+type CallerListInnerProps = {|
+  callers: Array<Caller>,
+  ...BaseCallerListProps
+|};
+
+function CallerListInner(props: CallerListInnerProps) {
 
   const classes = useStyles();
 
@@ -51,7 +77,7 @@ export default function CallerList(props: CallerListProps) {
     ).length
   }
 
-  function componentWillReceiveProps(nextProps: CallerListProps, nextContext: any): void {
+  function componentWillReceiveProps(nextProps: CallerListInnerProps, nextContext: any): void {
     let currentCallers = ISet(props.callers.map(caller => caller.fullNumber));
     let newCallers = ISet(nextProps.callers.map(caller => caller.fullNumber));
     if (currentCallers !== newCallers) {
@@ -87,7 +113,7 @@ export default function CallerList(props: CallerListProps) {
             <EditableCaller
               key={caller.fullNumber}
               caller={caller}
-              calls={props.calls.get(caller.fullNumber, [])}
+              calls={props.calls.get(caller.fullNumber, EMPTY_ASYNC_LIST)}
               onSelect={callerSelected}
               onSubmit={handleSubmit}
               selected={selected.has(caller.fullNumber)}

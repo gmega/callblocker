@@ -1,53 +1,46 @@
 // @flow
 
 // Fields which can never be set for any Caller.
+import type {Partial} from '../helpers';
+
 export type CallerUnmodifiable = {|
-  lastCall: string,
-  calls: number
+  +lastCall?: string,
+  +calls: number
 |}
 
 // Fields which can be set for new and existing callers.
 export type CallerModifiable = {|
-  block?: boolean,
-  description?: string,
-  notes?: string
-|}
-
-// Fields which can be set only for new callers.
-export type CallerKey = {|
-  areaCode: string,
-  number: string
+  block: boolean,
+  description: string,
+  notes: string
 |}
 
 // Caller instance with all fields (returned from API).
 export type Caller = {|
-  ...CallerKey,
+  +fullNumber: string,
+  +areaCode: string,
+  +number: string,
   ...CallerUnmodifiable,
-  // Can't just expand CallerModifiable as otherwise we have to handle
-  // the ? types all over the code, when these fields are always defined
-  // when coming from the API. The other option would be to force the fields
-  // to be present in the delta, but this would ruin their direct translation
-  // into partial updates for API PATCH requests.
-  block: boolean,
-  description: string,
-  notes: string,
-  fullNumber: string
-|}
-
-// Edits made to existing callers.
-export type CallerDelta = {|
-  ...CallerModifiable,
-  original: Caller
-|}
-
-// New callers.
-export type NewCaller = {|
-  ...CallerKey,
   ...CallerModifiable
 |}
 
+// New callers only have "settable" fields.
+export type NewCaller = {|
+  areaCode: string,
+  number: string,
+  ...CallerModifiable
+|}
+
+// Deltas can only be issued for modifiable fields, but they are special
+// in that they can describe partial updates (i.e., they contain only the fields
+// that change wrt the original) and therefore fields are allowed to be missing.
+export type CallerDelta = {|
+  +original: Caller,
+  ...Partial<CallerModifiable>
+|}
+
 export type Call = {|
-  caller: string,
-  blocked: boolean,
-  time: string
+  +caller: string,
+  +blocked: boolean,
+  +time: string
 |};

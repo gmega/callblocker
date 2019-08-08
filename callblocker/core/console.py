@@ -92,7 +92,7 @@ class ModemConsole(BaseModemConsole):
         except asyncio.TimeoutError:
             print('No reply from modem. Invalid command?')
         except ModemException as ex:
-            print('Error %s' % str(ex))
+            print('Failure %s' % str(ex))
 
     def help_atcommand(self):
         print('Submits an AT command directly to the modem and waits for a reply for ')

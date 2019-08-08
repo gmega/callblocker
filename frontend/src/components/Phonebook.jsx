@@ -5,6 +5,7 @@ import {Map as IMap} from 'immutable';
 import React, {useEffect} from 'react';
 import {connect} from 'react-redux';
 import {Dispatch} from 'redux';
+import type {AsyncList} from '../actions/api';
 import {clearCache, createCaller, fetchCallers, fetchCalls} from '../actions/api';
 import type {Call, Caller, NewCaller} from '../types/domainTypes';
 import CallerList from './CallerList';
@@ -15,8 +16,7 @@ const useStyles = makeStyles(theme => ({
     padding: '2px 4px',
     display: 'flex',
     alignItems: 'center',
-    marginBottom: theme.spacing(2),
-    width: 400
+    marginBottom: theme.spacing(2)
   },
   input: {
     marginLeft: 8,
@@ -59,7 +59,7 @@ function SearchInput(props: {
 
 function Phonebook(props: {
   dispatch: Dispatch,
-  callers: Array<Caller>,
+  callers: AsyncList<Caller>,
   calls: IMap<string, Array<Call>>
 }) {
   const {dispatch, callers, calls} = props;
@@ -70,14 +70,14 @@ function Phonebook(props: {
     // Bombing the whole tree of cached objects is not the most efficient approach,
     // but it is the simplest.
     dispatch(clearCache());
-    dispatch(fetchCallers('description'));
+    dispatch(fetchCallers('description', '',true));
   }, []);
 
   function handleSearchUpdate(content: string) {
     dispatch(
       content ?
-        fetchCallers('text_score', content) :
-        fetchCallers('description')
+        fetchCallers('text_score', content, true) :
+        fetchCallers('description', true)
     );
   }
 
@@ -114,4 +114,4 @@ function Phonebook(props: {
   )
 }
 
-export default connect((state) => state.apiObjects)(Phonebook);
+export default connect((state) => state)(Phonebook);

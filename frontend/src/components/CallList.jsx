@@ -1,9 +1,10 @@
 // @flow
 
 import {Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, makeStyles} from '@material-ui/core';
-import {blue} from '@material-ui/core/colors';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import React from 'react';
+import type {AsyncList} from '../actions/api';
+import {renderAsyncList} from '../actions/api';
 import type {Call, Caller} from '../types/domainTypes';
 import {SimpleCallerListItem} from './CallerListItem';
 import CallListItem from './CallListItem';
@@ -22,10 +23,12 @@ const useStyles = makeStyles(theme => ({
 export function CallList(props: {
   open: boolean,
   caller: Caller,
-  calls: Array<Call>,
+  calls: AsyncList<Call>,
   onClose: () => void
 }) {
   const classes = useStyles();
+
+  const calls = props.calls;
 
   return (
     <Dialog
@@ -43,18 +46,26 @@ export function CallList(props: {
       * Don't know why, and could not fix it otherwise.
       */}
       <Box className={classes.callerListItem}/>
-      <DialogContent> {
-        props.calls.length > 0 ?
-          <DialogContent> {
-            props.calls.map(call => {
-              return <CallListItem key={call.time} call={call}/>
-            })
-          }
-          </DialogContent> :
-          <div className={classes.spinner}>
-            <CircularProgress/>
-          </div>
-      }
+      <DialogContent>
+        {
+          renderAsyncList(
+            calls,
+            () => (
+              <div className={classes.spinner}>
+                <CircularProgress/>
+              </div>
+            ),
+            (calls: Array<Call>) => (
+              <DialogContent> {
+                calls.map(call => {
+                  return <CallListItem key={call.time} call={call}/>
+                })
+              }
+              </DialogContent>
+            ),
+            (reason: string) => 'Failed to fetch list contents.'
+          )
+        }
       </DialogContent>
       <DialogActions>
         <Button onClick={props.onClose} color='primary'>

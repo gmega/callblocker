@@ -1,44 +1,83 @@
 // @flow
 
-import {Snackbar} from '@material-ui/core';
-import React from 'react';
-import type {OperationStatus} from '../actions/status';
-import {StatusSnackbarContent} from './StatusSnackbarContent';
-import {Set as ISet, Map as IMap} from 'immutable';
+import {withSnackbar, WithSnackbarProps} from 'notistack';
+import React, {useEffect} from 'react';
+import type {ApiRequest, FormatterRegistry} from '../actions/api';
+import {COMPLETE, FAILURE, SUCCESS} from '../actions/api';
+import type {ApplicationState} from '../reducers';
 
+const DEFAULT_DISPLAY_TIMEOUT = 3000;
 
-export function StatusArea(props: { status: IMap<string, OperationStatus> }) {
+export type DisplayInfo = {
+  id: string,
+  message: string,
+  outcome: 'success' | 'error',
+  displayFor: number,
+  activeTimer?: TimeoutID
+};
 
-  const [suppressed, setSuppressed] = React.useState(ISet());
+function StatusContainer(props: {
+  enqueueSnackbar: $PropertyType<WithSnackbarProps, 'enqueueSnackbar'>,
+  closeSnackbar: $PropertyType<WithSnackbarProps, 'closeSnackbar'>,
+  formatter: FormatterRegistry,
+  state: ApplicationState
+}) {
 
-  function suppress(key) {
-    setSuppressed(suppressed.add(key));
+  const {formatter, state} = props;
 
-    setTimeout(() => {
-      setSuppressed(suppressed.delete(key));
-    }, 3000);
+  const [lastSeen, setLastSeen] = React.useState<number>(-1);
+
+  useEffect(() => {
+    const {counter, request} = state.lastRequest;
+    if (counter !== lastSeen && request) {
+      displayOutcome(request);
+      setLastSeen(counter);
+    }
+  });
+
+  function displayOutcome(request: ApiRequest): ?DisplayInfo {
+    // We only track complete requests. Tracking incomplete requests
+    // requires a more complex scheme.
+    if (request.status !== COMPLETE) {
+      return;
+    }
+
+    const {success, failure} = formatter[request.type];
+    switch (request.outcome.type) {
+
+      case SUCCESS:
+        if (success) {
+          props.enqueueSnackbar(
+            success.message(request.source, request.outcome.payload),
+            {
+              key: request.type,
+              variant: 'success',
+              autoHideDuration: success.displayFor || DEFAULT_DISPLAY_TIMEOUT,
+              preventDuplicate: true
+            }
+          );
+        }
+        break;
+
+      case FAILURE:
+        props.enqueueSnackbar(
+          failure.message(request.source, request.outcome.reason),
+          {
+            key: request.type,
+            variant: 'error',
+            autoHideDuration: failure.displayFor || DEFAULT_DISPLAY_TIMEOUT,
+            preventDuplicate: true
+          }
+        );
+        break;
+
+      default:
+        break;
+
+    }
   }
 
-  if (props.status.size) {
-    return (
-      [...props.status.entries()].map<any>(([key, status]) => {
-        return <Snackbar
-          key={key}
-          open={!suppressed.has(key)}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'center'
-          }}
-        >
-          <StatusSnackbarContent
-            variant={status.success ? 'success' : 'error'}
-            message={status.message}
-            onClose={() => suppress(key)}
-          />
-        </Snackbar>
-      })
-    )
-  } else {
-    return <div></div>;
-  }
+  return null;
 }
+
+export default withSnackbar(StatusContainer);

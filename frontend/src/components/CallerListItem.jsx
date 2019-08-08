@@ -55,7 +55,7 @@ export function SimpleCallerListItem(props: {
       `${caller.description ? caller.description : 'Unknown Caller'} - ` +
       (
         !caller.calls ?
-          'never called.' :
+          '0 calls' :
           `${caller.calls} call${caller.calls > 1 ? 's' : ''}`
       )
     )
@@ -193,7 +193,7 @@ export default function CallerListItem(props: {
             </Tooltip>
           </div> :
           <Typography variant='caption' color='textSecondary' className={clsx(classes.unwrappable, classes.timeOfCall)}>
-            {formatTime(moment(caller.lastCall))}
+            {caller.lastCall ? formatTime(moment(caller.lastCall)) : 'Never called'}
           </Typography>
         }
       </ListItem>

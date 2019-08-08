@@ -5,21 +5,22 @@ import {Map as IMap} from 'immutable';
 import React, {useEffect} from 'react';
 import {connect} from 'react-redux';
 import {Dispatch} from 'redux';
-import {API_PARAMETERS, fetchCallers, fetchCalls, patchCallers} from '../actions/api';
+import type {AsyncList} from '../actions/api';
+import {API_PARAMETERS, CallerOrderings, fetchCallers, fetchCalls, patchCallers} from '../actions/api';
 import type {Call, Caller, CallerDelta} from '../types/domainTypes';
 import CallerList from './CallerList';
 import SimpleListMenu from './SimpleListMenu';
 
 const OPTIONS = [
-  {label: 'Most recent callers', api_parameter: 'last_call'},
-  {label: 'Callers with most calls', api_parameter: 'calls'},
-  {label: 'Callers added most recently', api_parameter: 'date_inserted'}
+  {label: 'Most recent callers', api_parameter: CallerOrderings.last_call},
+  {label: 'Callers with most calls', api_parameter: CallerOrderings.calls},
+  {label: 'Callers added most recently', api_parameter: CallerOrderings.date_inserted}
 ];
 
 type CallerPanelProps = {
   dispatch: Dispatch,
-  callers: Array<Caller>,
-  calls: IMap<string, Array<Call>>
+  callers: AsyncList<Caller>,
+  calls: IMap<string, AsyncList<Call>>
 }
 
 function CallerPanel(props: CallerPanelProps) {
@@ -78,4 +79,4 @@ function CallerPanel(props: CallerPanelProps) {
   )
 }
 
-export default connect((state) => state.apiObjects)(CallerPanel);
+export default connect((state) => state)(CallerPanel);

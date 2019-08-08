@@ -1,6 +1,8 @@
 // @flow
 import moment from "moment";
 
+export type Partial<T> = $Rest<T, {}>;
+
 export function formatTime(callDate: moment, now: moment = null): string {
   now = now ? now : moment();
 

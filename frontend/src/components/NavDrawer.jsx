@@ -16,15 +16,16 @@ import {
 } from '@material-ui/core';
 
 import {makeStyles, useTheme} from '@material-ui/core/styles'
-import {Add, ContactPhone, Phone, Settings} from '@material-ui/icons';
+import {ContactPhone, Phone, Settings} from '@material-ui/icons';
 import MenuIcon from '@material-ui/icons/Menu';
+import {FORMATTERS} from '../actions/api';
 import Nop from './Nop';
 import React from 'react'
 import {connect} from 'react-redux';
 import {Link} from 'react-router-dom';
-import type {StateType} from '../reducers/index';
+import type {ApplicationState} from '../reducers/index';
 import Routes from '../Routes';
-import {StatusArea} from './StatusArea';
+import StatusContainer from './StatusArea';
 
 const drawerWidth = 240;
 
@@ -65,7 +66,7 @@ const useStyles = makeStyles(theme => ({
 }));
 
 
-function NavDrawer(props: StateType) {
+function NavDrawer(props: ApplicationState) {
   const classes = useStyles();
   const theme = useTheme();
 
@@ -115,7 +116,7 @@ function NavDrawer(props: StateType) {
 
   return (
     <Nop>
-      <StatusArea status={props.operationStatus}/>
+      <StatusContainer formatter={FORMATTERS} state={props}/>
       <div className={classes.root}>
 
         <CssBaseline/>
@@ -172,6 +173,6 @@ function NavDrawer(props: StateType) {
   );
 }
 
-const mapStateToProps = (state: StateType, ownProps?) => ({...state, ...ownProps});
+const mapStateToProps = (state: ApplicationState, ownProps?) => ({...state, ...ownProps});
 
 export default connect(mapStateToProps)(NavDrawer);

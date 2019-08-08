@@ -1,6 +1,7 @@
 // @flow
 
 import React from 'react';
+import type {AsyncList} from '../actions/api';
 import type {Call, Caller, CallerDelta} from '../types/domainTypes';
 import CallerEditForm from './CallerEditForm';
 import CallerListItem from './CallerListItem';
@@ -8,7 +9,7 @@ import {CallList} from './CallList';
 
 export default function EditableCaller(props: {
   caller: Caller,
-  calls: Array<Call>,
+  calls: AsyncList<Call>,
   selected: boolean,
   onDisplayCalls: (caller: Caller) => void,
   onSubmit: (delta: CallerDelta) => void,
@@ -42,12 +43,21 @@ export default function EditableCaller(props: {
 
   return (
     <div>
-      <CallerListItem {...props} onEdit={handleEditClicked} onSelect={props.onSelect} onClick={handleCallerClicked}/>
-      <CallerEditForm {...props} open={editFormOpen} onSubmit={handleFormSubmitted}
+      <CallerListItem {...props}
+                      onEdit={handleEditClicked}
+                      onSelect={props.onSelect}
+                      onClick={handleCallerClicked}/>
+      <CallerEditForm {...props}
+                      open={editFormOpen}
+                      onSubmit={handleFormSubmitted}
                       onCancel={handleEditCancelled}/>
-      <CallList open={callListOpen} caller={props.caller}
-                calls={props.calls}
-                onClose={() => setCallListOpen(false)}/>
+      {callListOpen ?
+        <CallList open={callListOpen}
+                  caller={props.caller}
+                  calls={props.calls}
+                  onClose={() => setCallListOpen(false)}
+        /> : null
+      }
     </div>
   )
 }
