@@ -33,7 +33,6 @@ const initialState = {
 };
 
 export default (state: ApiState = initialState, action: ApiAction): ApiState => {
-  console.log(action);
   switch (action.type) {
     case FETCH_CALLERS:
       return {

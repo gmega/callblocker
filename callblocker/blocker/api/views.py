@@ -4,7 +4,7 @@ from typing import Dict, Any
 from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models import Count, Value, FloatField
 from django.db.models import Q
-from django.db.models.functions import Greatest
+from django.db.models.functions import Greatest, Lower
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
@@ -24,7 +24,18 @@ from callblocker.core.healthmonitor import monitor
 
 class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
     ALLOWED_ORDERINGS = frozenset(['description', 'calls', 'date_inserted', 'last_call', 'text_score'])
-    ASCENDING_ORDERINGS = frozenset(['description'])
+
+    ORDERING_CONFIG = {
+        'description': {
+            'multiple': True,
+            'ordering_field': ['no_description', 'description_ci']
+        },
+        'last_call': {
+            'multiple': True,
+            'ordering_field': ['no_last_call', '-last_call']
+        }
+    }
+
     DEFAULT_ORDERING = ['last_call']
 
     pagination_class = LimitOffsetPagination
@@ -39,15 +50,23 @@ class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
     def get_queryset(self):
         args = self._get_params()
         return self._order(
-            self._query(
+            self._text_query(
                 self._filter_blocked(
-                    Caller.objects.annotate(calls=Count('call')), args
+                    Caller.objects.annotate(
+                        calls=Count('call'),
+                        description_ci=Lower('description')
+                    ).extra(
+                        select={
+                            'no_last_call': 'last_call is null',
+                            'no_description': 'description = \'\''
+                        }
+                    ), args
                 ), args
             ), args
         )
 
     @staticmethod
-    def _query(queryset, args):
+    def _text_query(queryset, args):
         text = args.get('text')
         if not text:
             # If no text search, annotates text_score with a 0.0 so that the serializer won't complain.
@@ -73,8 +92,18 @@ class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
     def _order(queryset, args):
         # Ordering.
         ordering = args['ordering']
-        ascending = ordering in CallerViewSet.ASCENDING_ORDERINGS
-        return queryset.order_by(f'{"-" if not ascending else ""}{ordering}')
+
+        # By default, we order on the field with the same name as the ordering,
+        # in descending order.
+        info = CallerViewSet.ORDERING_CONFIG.get(ordering, {})
+        field = info.get('ordering_field', ordering)
+        ascending = info.get('ascending', False)
+        multiple = info.get('multiple', False)
+
+        return (
+            queryset.order_by(f'{"-" if not ascending else ""}{field}') if not multiple
+            else queryset.extra(order_by=field)
+        )
 
     @staticmethod
     def _filter_blocked(queryset, args):

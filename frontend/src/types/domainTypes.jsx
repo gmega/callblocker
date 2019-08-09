@@ -1,8 +1,8 @@
 // @flow
 
-// Fields which can never be set for any Caller.
 import type {Partial} from '../helpers';
 
+// Fields which can never be set for any Caller.
 export type CallerUnmodifiable = {|
   +lastCall?: string,
   +calls: number

@@ -8,14 +8,6 @@ import type {ApplicationState} from '../reducers';
 
 const DEFAULT_DISPLAY_TIMEOUT = 3000;
 
-export type DisplayInfo = {
-  id: string,
-  message: string,
-  outcome: 'success' | 'error',
-  displayFor: number,
-  activeTimer?: TimeoutID
-};
-
 function StatusContainer(props: {
   enqueueSnackbar: $PropertyType<WithSnackbarProps, 'enqueueSnackbar'>,
   closeSnackbar: $PropertyType<WithSnackbarProps, 'closeSnackbar'>,
@@ -35,7 +27,7 @@ function StatusContainer(props: {
     }
   });
 
-  function displayOutcome(request: ApiRequest): ?DisplayInfo {
+  function displayOutcome(request: ApiRequest) {
     // We only track complete requests. Tracking incomplete requests
     // requires a more complex scheme.
     if (request.status !== COMPLETE) {
@@ -73,8 +65,8 @@ function StatusContainer(props: {
 
       default:
         break;
-
     }
+
   }
 
   return null;

@@ -23,6 +23,7 @@
   "homepage": "https://github.com/gmega/callblocker#readme",
   "devDependencies": {
     "@babel/core": "^7.5.5",
+    "@babel/plugin-proposal-optional-chaining": "^7.2.0",
     "@babel/preset-env": "^7.5.5",
     "@babel/preset-flow": "^7.0.0",
     "@babel/preset-react": "^7.0.0",

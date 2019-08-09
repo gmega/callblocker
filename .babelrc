@@ -5,6 +5,7 @@
     "@babel/preset-flow"
   ],
   "plugins": [
-    "transform-class-properties"
+    "transform-class-properties",
+    "@babel/plugin-proposal-optional-chaining"
   ]
 }

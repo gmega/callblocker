@@ -3,16 +3,10 @@
 import {Promise, Response} from 'flow';
 import React from "react";
 import {Dispatch} from 'react-redux';
+import {API_PARAMETERS} from '../components/APIConfig';
 
 import {camelize, snakeize} from '../helpers';
 import type {Call, Caller, CallerDelta, NewCaller} from '../types/domainTypes';
-
-// ------------------- API config parameters ----------------------------------
-
-export const API_PARAMETERS = {
-  endpoint: 'http://localhost:8000/',
-  pollingInterval: 1000
-};
 
 // --------------------- Async Requests ---------------------------------------
 
@@ -263,10 +257,9 @@ export function fetchCallers(
   text: ?string,
   retry: boolean = false
 ) {
-  console.log(retry);
   return (dispatch: Dispatch) => {
     apiRequest(
-      `${API_PARAMETERS.endpoint}api/callers/?ordering=${ordering}${text ? `&text=${text}` : ''}`,
+      `${API_PARAMETERS.endpoint()}api/callers/?ordering=${ordering}${text ? `&text=${text}` : ''}`,
       {},
       (
         {
@@ -287,7 +280,7 @@ export function patchCallers(
 ): Promise<Response> {
   return (dispatch: Dispatch) =>
     apiRequest(
-      `${API_PARAMETERS.endpoint}api/callers/`,
+      `${API_PARAMETERS.endpoint()}api/callers/`,
       {
         headers: {'Content-Type': 'application/json'},
         method: 'PATCH',
@@ -307,7 +300,7 @@ export function patchCallers(
 export function createCaller(caller: NewCaller) {
   return (dispatch: Dispatch) =>
     apiRequest(
-      `${API_PARAMETERS.endpoint}api/callers/`,
+      `${API_PARAMETERS.endpoint()}api/callers/`,
       {
         headers: {'Content-Type': 'application/json'},
         method: 'POST',
@@ -332,7 +325,7 @@ export function fetchCalls(
 ): Promise<Response> {
   return (dispatch: Dispatch) =>
     apiRequest(
-      `${API_PARAMETERS.endpoint}api/callers/${caller.areaCode}-${caller.number}/calls/`,
+      `${API_PARAMETERS.endpoint()}api/callers/${caller.areaCode}-${caller.number}/calls/`,
       {},
       (
         {
@@ -391,44 +384,44 @@ function apiRequest<Output>(
           })
         }
       }).then(data => {
-        if (data) {
-          // Success.
-          dispatch(({
-            type: request.type,
-            status: COMPLETE,
-            source: request.source,
-            outcome: {
-              type: SUCCESS,
-              payload: mapResponse ? data.map(mapResponse) : data
-            }
-          }));
-        }
-      }).catch(reason => {
-        const shouldRetry = retry > 0;
-        // Failure, promise rejected.
-        dispatch({
+      if (data) {
+        // Success.
+        dispatch(({
           type: request.type,
           status: COMPLETE,
           source: request.source,
           outcome: {
-            type: FAILURE,
-            retry: shouldRetry,
-            reason: reason
+            type: SUCCESS,
+            payload: mapResponse ? data.map(mapResponse) : data
           }
-        });
-        // Repeats the request if so desired.
-        if (shouldRetry) {
-          setTimeout(() =>
+        }));
+      }
+    }).catch(reason => {
+      const shouldRetry = retry > 0;
+      // Failure, promise rejected.
+      dispatch({
+        type: request.type,
+        status: COMPLETE,
+        source: request.source,
+        outcome: {
+          type: FAILURE,
+          retry: shouldRetry,
+          reason: reason
+        }
+      });
+      // Repeats the request if so desired.
+      if (shouldRetry) {
+        setTimeout(() =>
             apiRequest(
               input, init, request, dispatch, mapResponse,
               retry - 1,
               Math.min(backoff * 2, maxBackoff),
               maxBackoff
             ),
-            backoff
-          )
-        }
-      })
+          backoff
+        )
+      }
+    })
   );
 }
 

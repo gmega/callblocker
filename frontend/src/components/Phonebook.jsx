@@ -74,10 +74,12 @@ function Phonebook(props: {
   }, []);
 
   function handleSearchUpdate(content: string) {
+    console.log(content);
+    console.log(content ? 'text' : 'description')
     dispatch(
       content ?
         fetchCallers('text_score', content, true) :
-        fetchCallers('description', true)
+        fetchCallers('description', '')
     );
   }
 

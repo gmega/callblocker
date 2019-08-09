@@ -7,6 +7,7 @@ import {applyMiddleware, createStore} from 'redux';
 import thunk from 'redux-thunk';
 import NavDrawer from './components/NavDrawer';
 import {rootReducer} from './reducers/index.js';
+import APIConfig from './components/APIConfig';
 
 const store = createStore(
   rootReducer,
@@ -15,6 +16,7 @@ const store = createStore(
 
 ReactDOM.render(
   <BrowserRouter>
+    <APIConfig/>
     <SnackbarProvider maxSnack={3}>
       <Provider store={store}>
         <NavDrawer/>

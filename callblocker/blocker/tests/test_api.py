@@ -3,7 +3,7 @@ import json
 import pytest
 from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 
-from callblocker.blocker.models import Source
+from callblocker.blocker.models import Caller, Source
 
 
 @pytest.mark.django_db
@@ -113,3 +113,38 @@ def test_post_disallows_duplicate(api_client):
     response = api_client.post('/api/callers/', data=json.dumps(caller), content_type='application/json')
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()['full_number'][0] == 'This field must be unique.'
+
+
+@pytest.mark.django_db
+def test_nulls_come_last(api_client):
+    # We can't create those via API as the API does not allow setting last_call.
+    caller_a = Caller(
+        area_code='11',
+        number='2345678',
+        description='Aaaaaa',
+        source=Source.predef_source(Source.USER)
+    )
+
+    caller_b = Caller(
+        area_code='11',
+        number='23456710',
+        last_call='2029-04-18T11:51:09.781360+00:00',
+        source=Source.predef_source(Source.USER)
+    )
+
+    caller_a.save()
+    caller_b.save()
+
+    callers = api_client.get('/api/callers/?limit=1000&ordering=description').json()['results']
+    # We expect that there are at least some data loaded in the test db.
+    # Less than 20 callers is suspicious.
+    assert len(callers) > 20
+
+    assert callers[0]['full_number'] == caller_a.full_number
+    assert callers[-1]['full_number'] == caller_b.full_number
+
+    callers = api_client.get('/api/callers/?limit=1000&ordering=last_call').json()['results']
+    assert len(callers) > 20
+
+    assert callers[0]['full_number'] == caller_b.full_number
+    assert callers[-1]['full_number'] == caller_a.full_number

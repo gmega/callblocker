@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 import pytz
 from yaml import dump, Dumper
 
-NAMES = """
+NAMES = """Zed Albright
 Marinda Stgeorge  
 Kimberley Mccausland  
 Fermin Shope  
