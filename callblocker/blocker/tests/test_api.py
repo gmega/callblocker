@@ -98,7 +98,7 @@ def test_post_creates_resource(api_client):
 
     caller = api_client.get('/api/callers/11-23456789.json').json()
     assert caller['full_number'] == '1123456789'
-
+    assert caller['source'] == f'http://testserver/api/sources/{Source.USER}.json'
 
 @pytest.mark.django_db
 def test_post_disallows_duplicate(api_client):

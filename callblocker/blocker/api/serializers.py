@@ -77,9 +77,7 @@ class CallerPOSTSerializer(ModelSerializer):
     )
 
     source = HyperlinkedRelatedField(
-        # We set all callers from incoming POST calls as
-        # "user defined" unless otherwise specified.
-        default=Source.predef_source(Source.CID),
+        default=None,
         view_name='source-detail',
         queryset=Source.objects.all()
     )
@@ -95,3 +93,11 @@ class CallerPOSTSerializer(ModelSerializer):
             'notes',
             'source'
         ]
+
+    def create(self, validated_data):
+        # Ideally we'd have this as a default in HyperlinkedRelatedField above, but
+        # then some weird stuff will happen as Django tries to access the database
+        # at class definition time.
+        if validated_data.get('source') is None:
+            validated_data['source'] = Source.predef_source(Source.USER)
+        return super().create(validated_data)
