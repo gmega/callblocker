@@ -1,3 +1,7 @@
+# If building on the Raspberry Pi, set this to 1.
+ARG RPI_BUILD
+
+# This is not a real build argument.
 ARG APP_FOLDER_ARG=/callblocker
 
 # ==== Webpack Build
@@ -15,8 +19,11 @@ RUN npm install --silent
 
 COPY ./frontend/ ${APP_FOLDER}/frontend/
 
+ARG RPI_BUILD
+ENV BUILD_MODE=${RPI_BUILD:+'build-prod-rpi'}
+
 # Builds the react client.
-RUN npm run build-prod
+RUN npm run ${BUILD_MODE:-'build-prod-web'}
 
 # ==== Server Assembly
 FROM python:3.6.8-alpine3.10

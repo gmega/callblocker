@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build-dev": "webpack",
-    "build-prod": "webpack --env.prod",
-    "build-rpi": "webpack --env.prod --env.rpi",
+    "build-prod-web": "webpack --env.prod",
+    "build-prod-rpi": "webpack --env.prod --env.rpi",
     "devserver": "webpack-dev-server --open",
     "flow": "flow",
     "test": "jest"
