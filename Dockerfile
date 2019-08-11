@@ -26,7 +26,7 @@ ENV BUILD_MODE=${RPI_BUILD:+'build-prod-rpi'}
 RUN npm run ${BUILD_MODE:-'build-prod-web'}
 
 # ==== Server Assembly
-FROM python:3.6.8-alpine3.10
+FROM python:3.6-alpine
 
 ARG APP_FOLDER_ARG
 ENV APP_FOLDER=${APP_FOLDER_ARG}
