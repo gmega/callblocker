@@ -2,10 +2,10 @@
 
 export const API_PARAMETERS = {
   host: 'localhost',
-  port: 8000,
   protocol: 'http',
   pollingInterval: 1000,
-  endpoint: () => `${API_PARAMETERS.protocol}://${API_PARAMETERS.host}:${API_PARAMETERS.port}/`
+  endpoint: () =>
+    `${API_PARAMETERS.protocol}://${API_PARAMETERS.host}${API_PARAMETERS.port ? `:${API_PARAMETERS.port}` : ''}/`
 };
 
 // ----------------------------------------------------------------------------
@@ -19,6 +19,7 @@ export default () => {
   // For callblocker, this is a very reasonable assumption: the API runs from the same box
   // which serves the frontend, under a common web server.
   API_PARAMETERS.host = location.hostname;
+  API_PARAMETERS.port = location.port;
   console.log(API_PARAMETERS);
   return null;
 }
