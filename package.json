@@ -4,8 +4,9 @@
   "description": "callblocker ===========",
   "main": "index.js",
   "scripts": {
-    "build-dev": "webpack --mode development",
-    "build-prod": "webpack --mode production",
+    "build-dev": "webpack",
+    "build-prod": "webpack --env.prod",
+    "build-rpi": "webpack --env.prod --env.rpi",
     "devserver": "webpack-dev-server --open",
     "flow": "flow",
     "test": "jest"
