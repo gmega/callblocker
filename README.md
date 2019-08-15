@@ -1,5 +1,6 @@
 callblocker [![Build Status](https://api.travis-ci.org/gmega/callblocker.svg?branch=master)](https://travis-ci.org/gmega/callblocker) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) 
 ===========
+Um bloqueador de chamadas amigável para telefones fixos.
 
 Introdução
 ==========
@@ -17,7 +18,8 @@ Para rodar o bloqueador de chamadas, você vai precisar de um pouco de [hardware
 foi feito no Brasil, ele usa hardware disponível no mercado brasileiro. Você vai precisar também [instalar](#instalação) e 
 [configurar](#configuração) o bloqueador.
 
-Finalmente, se quiser ver alguns screenshots, vá à seção de [screenshots](). 
+Se quiser entender quais as limitações atuais, vá para [Limitações](#limitações). Finalmente, se quiser só ver alguns 
+screenshots, vá para [screenshots](#screenshots). 
 
 Hardware
 ========
@@ -104,23 +106,89 @@ Se tudo der certo, basta abrir um browser no celular ou Desktop e apontá-lo a:
  
  que você deverá ver uma tela como esta:
  
-_Voilà!_ O bloqueador de chamadas está funcionando!
+ <div align="center">
+    <img src="https://gmega.github.io/callblocker/img/no_calls.png">
+ </div>
  
- Screenshots
- ===========
+_Voilà!_ O bloqueador de chamadas está rodando! Mas isso não quer dizer, claro, que ele esteja funcionando. :-) A melhor
+forma de se assegurar que o bloqueador está de fato funcionando, por hora, é fazer uma ligação para o próprio número. Se
+tudo estiver funcionando, ela deve aparecer no lugar do aviso de que não há chamadas para mostrar.
+
+Limitações
+==========
+
+As limitações se dividem em duas categorias:
+
+1. **limitações tecnológicas.** Estas são as limitações inerentes à abordagem utilizada e que são, portanto, permanentes.
+2. **Limitações da implementação.** Estas são limitações da implementação atual e provavelmente serão resolvidas num 
+     futuro próximo.
+     
+Limitações Tecnológicas
+-----------------------
+O bloqueio é feito com base na informação de identificação de chamadas e nas possibilidades oferecidas
+por um modem comum. Isso traz duas limitações:
+
+1. se a pessoa que chama souber como [manipular a informação de identificação de chamada](https://en.wikipedia.org/wiki/Caller_ID_spoofing)
+   (o que, infelizmente, não é tão difícil quanto parece), ela pode inventar um número qualquer e furar a sua lista de 
+   bloqueio. Pior ainda, ela pode te levar a bloquear números que não são dela.
+   
+2. As operadoras tipicamente transmitem a informação de identificação de chamada após o primeiro toque. Isso quer dizer
+   que o telefone sempre toca uma vez, mesmo para números bloqueados. Para evitar que isso aconteça, seria necessário suprimir o 
+   primeiro toque de todas as chamadas. Isso, infelizmente, não é possível com um modem comum.
+   
+Limitações de Implementação
+-----------------------
+Na versão atual, ainda faltam:
+
+1. **Autenticação.** Qualquer usuário ligado à sua rede local tem acesso irrestrito ao bloqueador de chamadas. Isso deve
+   mudar em breve numa versão futura.
+   
+2. **HTTPS.** A comunicação é atualmente feita por HTTP, o que quer dizer que o tráfego é visível a observadores na 
+   rede. Isso inclui as eventuais senhas e tokens de autenticação que vão existir quando implementarmos (1). Usar HTTPS
+   em redes locais é inerentemente chato por causa da natureza dos certificados SSL. Portanto, mesmo quando isto estiver
+   disponível, vai ser chato de configurar/usar.
+   
+3. **Contatos.** Os contatos estão armazenados num banco de dados local e, atualmente, não existem ferramentas para 
+   exportá-los ou integrá-los com uma agenda existente como o [Google Contatos](https://contacts.google.com/). Isso 
+   também vai mudar numa versão futura.
+   
+4. **Debugging.** Não existem ferramentas integradas para verificar o funcionamento do modem e do bloqueador de chamadas.
+   Isso torna a configuração e resolução de problemas mais difícil. Isso deve mudar numa versão futura.
+   
+5. **Busca em bases de dados de telefones.** Existem alguns sites como o [Quem Perturba](https://quemperturba.inerciasensorial.com.br/)
+   que permitem que usuários comentem números de telefone. Seria simples (e útil) poder mostrar os comentários associados a um determinado
+   telefone desconhecido. Mais legal ainda seria analisar os comentários e decidir se o telefone deve ser bloqueado ou não
+   usando NLP. Pretendo fazer ambas as coisas em numa versão futura.
  
- A interface do bloqueador de chamadas é baseada no [Material UI](https://material-ui.com/). Isso faz com 
- que ela seja familar por um lado (o _material design_ no qual ela é baseada é utilizada nos aplicativos
- do Google) e amigável a dispositivos móveis no outro. O último requisito em particular é fundamental já 
- que eu basicamente acesso o bloqueador de chamadas pelo celular. Alguns screenshots:
+Screenshots
+===========
  
- Telefone Móvel
- -------
+A interface do bloqueador de chamadas é baseada no [Material UI](https://material-ui.com/). Isso faz com 
+que ela seja familar por um lado (o _material design_ no qual ela é baseada é utilizada nos aplicativos
+do Google) e amigável a dispositivos móveis no outro. O último requisito em particular é fundamental já 
+que eu basicamente acesso o bloqueador de chamadas pelo celular. Alguns screenshots:
  
+Celular
+-------
+
  <div align="center">
   
   Chamadas recentes        |  Busca na agenda
 :-------------------------:|:-------------------------:
-<img width="300" src="https://gmega.github.io/callblocker/img/recent_callers.png"/>    |  <img width="300" src="https://gmega.github.io/callblocker/img/recent_callers.png"/>  
+<img width="300" src="https://gmega.github.io/callblocker/img/recent_callers.png"/>    |  <img width="300" src="https://gmega.github.io/callblocker/img/phonebook.png"/>  
 
 </div>
+
+Desktop
+-------
+
+ <div align="center">
+  
+  Chamadas recentes        |  Busca na agenda
+:-------------------------:|:-------------------------:
+<img width="500" src="https://raw.githubusercontent.com/gmega/callblocker/gh-pages/img/recent_callers_desktop.png">|  <img width="500" src="https://gmega.github.io/callblocker/img/phonebook_desktop.png">  
+
+</div>
+
+
+

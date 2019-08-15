@@ -2,6 +2,8 @@
 
 import {Button, CircularProgress, List, Paper} from '@material-ui/core';
 import makeStyles from '@material-ui/core/styles/makeStyles';
+import Typography from '@material-ui/core/Typography';
+import {ErrorOutline} from '@material-ui/icons'
 import {Map as IMap, Set as ISet} from 'immutable';
 import React from 'react';
 import {isIOS, isSafari} from "react-device-detect";
@@ -48,9 +50,24 @@ export default function CallerList(props: CallerListProps) {
       </div>
     ),
     (callers: Array<Caller>) => {
-      // $FlowIgnore
-      const wrapped = {callers: callers, ...props};
-      return <CallerListInner {...wrapped}/>
+      if (callers.length > 0) {
+        // $FlowIgnore
+        const wrapped = {callers: callers, ...props};
+        return <CallerListInner {...wrapped}/>
+      } else {
+        return (
+          <div style={{display: 'flex', alignContent: 'center'}}>
+            <ErrorOutline htmlColor='#6C6C6C' style={{marginLeft: 5, marginRight: 15}}/>
+            <Typography
+              variant='body1'
+              color='textSecondary'
+
+            >
+              There are no calls to display.
+            </Typography>
+          </div>
+        )
+      }
     }
   );
 }
