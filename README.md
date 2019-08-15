@@ -116,17 +116,11 @@ _Voilà!_ O bloqueador de chamadas está funcionando!
  
  Celular
  -------
-
 <div align="center">
-    <div>
-        <img src="https://gmega.github.io/callblocker/img/recent_callers.png">
-        <p>Chamadas recentes.</p>
-    </div>
-    <div>
-        <img src="https://gmega.github.io/callblocker/img/phonebook.png">
-        <p>Busca por número e contato na agenda.</p>
-    </div>
+  <img width="300" src="https://gmega.github.io/callblocker/img/recent_callers.png"/>  
+  <img hspace="20" width="300" src="https://gmega.github.io/callblocker/img/phonebook.png"/>
 </div>
+
   
  
  
