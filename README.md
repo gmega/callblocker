@@ -108,7 +108,7 @@ Se tudo der certo, basta abrir um browser no celular ou Desktop e apontá-lo a:
  
  
  <div align="center">
-    <img src="https://gmega.github.io/callblocker/img/no_calls.png">
+    <img src="https://raw.githubusercontent.com/gmega/callblocker/gh-pages/img/no_calls.png">
  </div>
  
 
