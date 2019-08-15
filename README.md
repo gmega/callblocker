@@ -117,8 +117,12 @@ _Voilà!_ O bloqueador de chamadas está funcionando!
  Celular
  -------
 <div align="center">
-  <img width="300" src="https://gmega.github.io/callblocker/img/recent_callers.png"/>  
+  <div>
+    <img width="300" src="https://gmega.github.io/callblocker/img/recent_callers.png"/>  
+    <p>Chamadas recentes.</p>
+  </div>
   <img hspace="20" width="300" src="https://gmega.github.io/callblocker/img/phonebook.png"/>
+  <p>Busca na agenda.</p>
 </div>
 
   
