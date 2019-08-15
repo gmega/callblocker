@@ -1,5 +1,7 @@
 import logging
 
+import sys
+
 from callblocker.blocker.callmonitor import TelcoProvider, CIDParseError
 from callblocker.blocker.models import Caller, Source
 
@@ -59,3 +61,7 @@ class Vivo(TelcoProvider):
 
     def _isplit(self, string: str, index: int):
         return string[:index], string[index:]
+
+
+def get_telco(telco: str):
+    return getattr(sys.modules[__name__], telco)

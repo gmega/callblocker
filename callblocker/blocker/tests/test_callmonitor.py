@@ -8,11 +8,13 @@ from callblocker.blocker.callmonitor import CallMonitor
 from callblocker.blocker.models import Caller, Call, Source
 from callblocker.blocker.telcos import Vivo
 from callblocker.core.modem import Modem
+from callblocker.core.service import ServiceState
 from callblocker.core.tests.fakeserial import CX930xx_fake
+from callblocker.core.tests.utils import await_predicate
 
 
 @pytest.mark.django_db
-def test_register_calls(fake_serial):
+def test_register_calls(fake_serial, aio_loop):
     event = fake_serial.load_script(textwrap.dedent(
         """
         RING\n
@@ -35,16 +37,20 @@ def test_register_calls(fake_serial):
         """
     ), step=0)
 
-    loop = asyncio.get_event_loop()
+    loop = aio_loop.aio_loop
 
     modem = Modem(CX930xx_fake, fake_serial, loop)
-    monitor = CallMonitor(Vivo(), modem)
+    monitor = CallMonitor(Vivo(), modem, loop)
 
-    loop.create_task(fake_serial.loop())
-    loop.create_task(modem.loop())
-    loop.create_task(monitor.loop())
+    modem.start()
+    monitor.start()
 
-    loop.run_until_complete(event.wait())
+    # Both modem and monitor should have died with the same exception as per the EventStream contract.
+    await_predicate(lambda: monitor.status().state == ServiceState.ERRORED, 5)
+    assert isinstance(modem.status().exception, EOFError)
+    assert isinstance(monitor.status().exception, EOFError)
+
+    asyncio.run_coroutine_threadsafe(event.wait(), loop=loop).result(5)
 
     # We need this filter because the sample data loaded by the fixture contains a lot of stuff already.
     reference = {'992223451', '992223452'}
@@ -57,8 +63,8 @@ def test_register_calls(fake_serial):
     assert not any(event.blocked for event in events)
 
 
-@pytest.mark.django_db
-def test_blocks_calls(fake_serial):
+@pytest.mark.django_db(transaction=True)
+def test_blocks_calls(fake_serial, aio_loop):
     # Blacklisted number.
     blacklisted = Caller(
         source=Source.predef_source(Source.CID),
@@ -87,16 +93,17 @@ def test_blocks_calls(fake_serial):
     fake_serial.on_input(input='ATH1').reply('OK')
     last = fake_serial.on_input(input='ATH0').reply('OK')
 
-    loop = asyncio.get_event_loop()
+    loop = aio_loop.aio_loop
 
-    modem = Modem(modem_type=CX930xx_fake, device_factory=fake_serial)
-    monitor = CallMonitor(provider=Vivo(), modem=modem)
+    modem = Modem(CX930xx_fake, fake_serial, loop)
+    monitor = CallMonitor(Vivo(), modem, loop)
 
-    loop.create_task(fake_serial.loop())
-    loop.create_task(modem.loop())
-    loop.create_task(monitor.loop())
+    modem.start()
+    monitor.start()
 
-    loop.run_until_complete(last.wait())
+    asyncio.run_coroutine_threadsafe(last.wait(), loop=loop).result(10)
+
+    await_predicate(lambda: monitor.status().state == ServiceState.ERRORED, 5)
 
     # Checks that the call has been logged
     event = Call.objects.get(

@@ -1,7 +1,10 @@
 import asyncio
-from asyncio import Protocol, StreamReader, Event, Queue
+from asyncio import Protocol, StreamReader, Event, Queue, AbstractEventLoop
+from threading import Thread
 
-from callblocker.core.modem import ModemType, CX930xx, SerialDeviceFactory
+from callblocker.core.modem import ModemType, SerialDeviceFactory
+from callblocker.core.modems import CX930xx
+from callblocker.core.service import AsyncioService, ServiceState
 
 CX930xx_fake = ModemType(
     # We are forced by https://bugs.python.org/issue17083 to create a different modem type that uses
@@ -14,12 +17,12 @@ CX930xx_fake = ModemType(
 
 
 class ReplyAction(object):
-    def __init__(self, input: str, timeout: int = 10):
+    def __init__(self, aio_loop: AbstractEventLoop, input: str, timeout: int = 10):
         self.output = None
         self.input = input
         self.timeout = timeout
         self.latency = 0
-        self.done = Event()
+        self.done = Event(loop=aio_loop)
 
     def reply(self, output: str) -> 'ReplyAction':
         self.output = output
@@ -43,10 +46,10 @@ class ReplyAction(object):
 
 
 class TimedAction(object):
-    def __init__(self, timeout: int):
+    def __init__(self, aio_loop: AbstractEventLoop, timeout: int):
         self.timeout = timeout
         self.payload = None
-        self.done = Event()
+        self.done = Event(loop=aio_loop)
 
     def output(self, output: str):
         self.payload = output
@@ -61,22 +64,23 @@ class TimedAction(object):
         await self.done.wait()
 
 
-class ScriptedModem(SerialDeviceFactory, Protocol):
+class ScriptedModem(SerialDeviceFactory, Protocol, AsyncioService):
     """
     ScriptedModem emulates the behavior of a serial modem by following a pre-programmed script. It expects
     commands to be issued in a certain order. It also supports timed actions (e.g., after 3 seconds, generate
     this command).
     """
 
-    def __init__(self, command_mode=False):
+    name = 'fake modem'
+
+    def __init__(self, aio_loop: AbstractEventLoop, command_mode=False):
+        AsyncioService.__init__(self, aio_loop)
         self.script = None
         self._deferred_actions = []
         self.out_buffer = None
         self.in_buffer = None
-        self.closed = False
 
         self.command_mode = command_mode
-        self.aio_loop = None
 
     # --------------------- Scripting methods ---------------------------------
 
@@ -88,16 +92,19 @@ class ScriptedModem(SerialDeviceFactory, Protocol):
         :param input:
         :return:
         """
-        reply = ReplyAction(input)
+        self._allow_states(*ServiceState.halted_states())
+        reply = ReplyAction(self.aio_loop, input)
         self._add_action(reply)
         return reply
 
     def after(self, seconds: int):
-        timed = TimedAction(seconds)
+        self._allow_states(*ServiceState.halted_states())
+        timed = TimedAction(self.aio_loop, seconds)
         self._add_action(timed)
         return timed
 
     def load_script(self, lines: str, step: int = 0):
+        self._allow_states(*ServiceState.halted_states())
         last = None
         for line in lines.splitlines(keepends=False):
             last = self.after(step).output(line)
@@ -113,6 +120,8 @@ class ScriptedModem(SerialDeviceFactory, Protocol):
     # ------------------- SerialDeviceFactory --------------------------------
 
     async def connect(self, aio_loop):
+        self._allow_states(*ServiceState.halted_states())
+
         self.script = Queue(loop=aio_loop)
         self.in_buffer = StreamReader(loop=aio_loop)
         self.out_buffer = StreamReader(loop=aio_loop)
@@ -123,15 +132,25 @@ class ScriptedModem(SerialDeviceFactory, Protocol):
 
         self._deferred_actions = []
 
-        # This would normally be spawned in healthmonitor, but since this is
-        # mocking a lower layer I won't care that much about it.
-        asyncio.run_coroutine_threadsafe(self.loop(), loop=aio_loop)
+        # We're inside of an asyncio task, but start is blocking. We hack up
+        # a nonblocking version of it.
+        started = Event(loop=self.aio_loop)
+
+        def async_start():
+            self.start()
+            self.aio_loop.call_soon_threadsafe(started.set)
+
+        Thread(target=async_start).start()
+
+        await started.wait()
 
         return self.out_buffer, self
 
     # ------------------ Fake StreamWriter ------------------------------------
 
     def write(self, data: bytes):
+        self._allow_states(ServiceState.READY)
+
         if self.command_mode and self._try_command(data):
             return
 
@@ -161,28 +180,27 @@ class ScriptedModem(SerialDeviceFactory, Protocol):
         return self
 
     def close(self):
-        self.closed = True
+        self.stop()
 
     # ------------------- Management methods ----------------------------------
 
-    async def loop(self):
-        while not self.closed:
-            # If the queue is empty and we're not in command mode,
-            # we're done.
-            if self.script.empty() and not self.command_mode:
-                break
-
+    async def _event_loop(self):
+        self._startup_event.set()
+        # If the queue is empty and we're not in command mode,
+        # we're done.
+        while (not self.script.empty()) or self.command_mode:
             event = await self.script.get()
             await event.process(self)
 
+    def _graceful_cleanup(self):
         self.out_buffer.feed_eof()
         self.in_buffer.feed_eof()
 
     # ------------------- Convenience methods ---------------------------------
 
     @staticmethod
-    def from_modem_type(modem_type: ModemType) -> 'ScriptedModem':
-        modem = ScriptedModem(command_mode=True)
+    def from_modem_type(modem_type: ModemType, aio_loop: AbstractEventLoop) -> 'ScriptedModem':
+        modem = ScriptedModem(aio_loop=aio_loop, command_mode=True)
         for command in modem_type.commands[ModemType.INIT]:
             modem.on_input(command).reply('OK')
 

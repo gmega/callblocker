@@ -1,26 +1,28 @@
-import asyncio
 import re
 from typing import Union
 
-from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils import timezone
 
-from callblocker.blocker import bootstrap
+from callblocker import blocker
 from callblocker.blocker.models import Caller, Source, Call
-from callblocker.blocker.bootstrap import bootstrap_callmonitor
+from callblocker.core import serviceregistry
 from callblocker.core.console import BaseModemConsole
+from callblocker.core.modem import Modem
 
 
 class Command(BaseCommand):
     help = 'Starts the call monitor console app.'
 
     def handle(self, *args, **options):
-        bootstrap.enable_modem_monitoring()
+        blocker.enable()
+
+        from callblocker.blocker import bootstrap
+        bootstrap.bootstrap()
+
         Console(
             stdout=self.stdout,
-            device=settings.MODEM_DEVICE,
-            baud_rate=settings.MODEM_BAUD
+            modem=serviceregistry.registry().services[Modem.name]
         ).cmdloop('Type "help" to see available commands.')
 
 
@@ -29,9 +31,6 @@ class Console(BaseModemConsole):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Starts the call monitor.
-        self.blocker = bootstrap_callmonitor(self.modem)
 
     def do_blocknumber(self, arg):
         number = self._get_number(arg)

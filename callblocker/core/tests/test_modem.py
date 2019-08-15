@@ -2,10 +2,11 @@ import asyncio
 import textwrap
 
 from callblocker.core.modem import ModemEvent, Modem
+from callblocker.core.service import ServiceState
 from callblocker.core.tests.fakeserial import CX930xx_fake
 
 
-def test_parses_events(fake_serial):
+def test_parses_events(fake_serial, aio_loop):
     fake_serial.after(seconds=0).output(textwrap.dedent("""
     
     RING
@@ -15,44 +16,45 @@ def test_parses_events(fake_serial):
     RING
     """))
 
-    loop = asyncio.get_event_loop()
     expected = [
         ModemEvent('RING', None),
         ModemEvent('CALL_ID', '111992659393'),
         ModemEvent('RING', None)
     ]
 
-    modem = Modem(modem_type=CX930xx_fake, device_factory=fake_serial, loop=loop)
+    loop = aio_loop.aio_loop
+    modem = Modem(modem_type=CX930xx_fake, device_factory=fake_serial, aio_loop=loop)
+    stream = modem.event_stream()
 
     async def collect():
         events = []
-        with modem.event_stream() as stream:
+        with stream as mstream:
             try:
-                async for event in stream:
+                async for event in mstream:
                     events.append(event)
             except EOFError:
                 pass
         return events
 
-    loop.create_task(fake_serial.loop())
-    loop.create_task(modem.loop())
-    actual = loop.run_until_complete(collect())
+    try:
+        modem.start()
+        actual = asyncio.run_coroutine_threadsafe(collect(), loop=loop).result()
+        assert actual == expected
+    finally:
+        status = modem.status()
+        assert status.state == ServiceState.ERRORED
+        assert isinstance(status.exception, EOFError)
 
-    assert actual == expected
 
-
-def test_sync_command(fake_serial):
-    loop = asyncio.get_event_loop()
-
+def test_sync_command(fake_serial, aio_loop):
     fake_serial.on_input('ATZ').reply('OK')
     fake_serial.on_input('AT+VCID=1').reply('OK')
 
-    modem = Modem(modem_type=CX930xx_fake, device_factory=fake_serial, loop=loop)
-    loop.create_task(fake_serial.loop())
-    loop.create_task(modem.loop())
-
-    try:
-        loop.run_until_complete(modem.sync_command('ATZ'))
-        loop.run_until_complete(modem.sync_command('AT+VCID=1'))
-    finally:
-        modem.close()
+    loop = aio_loop.aio_loop
+    modem = Modem(modem_type=CX930xx_fake, device_factory=fake_serial, aio_loop=loop)
+    modem.start()
+    asyncio.run_coroutine_threadsafe(modem.sync_command('ATZ'), loop=loop).result()
+    asyncio.run_coroutine_threadsafe(modem.sync_command('AT+VCID=1'), loop=loop).result()
+    status = modem.status()
+    assert status.state == ServiceState.ERRORED
+    assert isinstance(status.exception, EOFError)

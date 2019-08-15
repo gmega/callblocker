@@ -26,7 +26,10 @@ const baseConfig = (env) => ({
   devServer: {
     contentBase: './frontend/dist',
     historyApiFallback: true,
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    proxy: {
+      '/api': 'http://0.0.0.0:8000'
+    }
   },
   resolve: {
     extensions: ['.js', '.jsx']

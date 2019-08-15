@@ -44,7 +44,6 @@ services:
       - DJANGO_SETTINGS_MODULE=conf.settings.production.server
       - HOST_API_ADDRESSES=${HOST_API_ADDRESSES:?HOST_API_ADDRESS is required}
       - HOST_API_PORT=${HOST_API_PORT:-5000}
-      - MODEM_DEBUG=${MODEM_DEBUG:-False}
       - MODEM_USE_FAKE=${MODEM_USE_FAKE:-False}
     depends_on:
       - 'seed'

@@ -2,14 +2,13 @@ import asyncio
 import logging
 import re
 from abc import ABC, abstractmethod
-from asyncio import Event, StreamWriter, StreamReader, AbstractEventLoop
+from asyncio import Event, StreamWriter, StreamReader
 from collections import deque
-from threading import Thread
 from typing import Union, List, Dict, Tuple, Optional
 
 import serial_asyncio
 
-from callblocker.core.healthmonitor import HealthMonitor
+from callblocker.core.service import AsyncioService, ServiceState
 
 logger = logging.getLogger(__name__)
 
@@ -63,26 +62,6 @@ class ModemType(object):
         self.newline = newline
 
 
-CX930xx = ModemType(
-    encoding='ASCII',
-    newline=b'\r',
-    command_timeout=2,
-    commands={
-        ModemType.INIT: [
-            'ATE0',
-            'ATZ',
-            'AT+VCID=1'
-        ],
-        ModemType.DROP_CALL: [
-            'ATH1',
-            '#PAUSE',
-            '#PAUSE',
-            'ATH0'
-        ]
-    }
-)
-
-
 class SerialDeviceFactory(ABC):
     @abstractmethod
     async def connect(self, aio_loop) -> Tuple[asyncio.StreamReader, asyncio.StreamWriter]:
@@ -98,34 +77,23 @@ class PySerialDevice(SerialDeviceFactory):
         return await serial_asyncio.open_serial_connection(loop=aio_loop, url=self.port, baudrate=self.baud)
 
 
-class Modem(object):
+class Modem(AsyncioService):
+    name = 'modem'
 
     def __init__(self,
                  modem_type: ModemType,
                  device_factory: SerialDeviceFactory,
-                 loop: Optional[asyncio.AbstractEventLoop] = None):
+                 aio_loop: Optional[asyncio.AbstractEventLoop] = None):
+        super().__init__(aio_loop=asyncio.get_event_loop() if aio_loop is None else aio_loop)
         self.device_factory = device_factory
         self.modem_type = modem_type
 
-        self.aio_loop = asyncio.get_event_loop() if loop is None else loop
         self._reader: Optional[StreamReader] = None
         self._writer: Optional[StreamWriter] = None
         self.streams = []
-        self.running = False
-
-    def close(self):
-        if not self.running:
-            return
-
-        # FIXME Not sure this will work as intended. I'm hoping this will cause an exception
-        # at any blocked readers/writers to the serial device, but that may not be what happens.
-        self._writer.transport.close()
-
-        self._reader = self._writer = None
-        self.running = False
 
     async def run_command_set(self, command_set: str):
-        self._ensure_running()
+        self._allow_states(ServiceState.READY)
 
         for command in self.modem_type.commands[command_set]:
             # Again, somewhat crude parsing of special commands.
@@ -146,7 +114,7 @@ class Modem(object):
 
         :param command: A modem command string (e.g. 'ATZ')
         """
-        self._ensure_running()
+        self._allow_states(ServiceState.READY)
 
         with self.event_stream() as stream:
             await self.async_command(command)
@@ -167,7 +135,7 @@ class Modem(object):
 
         :param command: A modem command string (e.g. 'ATZ').
         """
-        self._ensure_running()
+        self._allow_states(ServiceState.READY)
 
         # This is the right way to write to an asyncio stream
         # (https://docs.python.org/3/library/asyncio-stream.html#asyncio.StreamWriter.drain)
@@ -181,37 +149,30 @@ class Modem(object):
         self.streams.append(stream)
         return stream
 
-    async def loop(self):
+    async def _event_loop(self):
+        # Connects to the modem.
         await self._connect()
-        self.running = True
-        while self.running:
-            try:
+        # Service is ready.
+        self._startup_event.set()
+        try:
+            while True:
                 event = await self._read_event()
-            except Exception as ex:
-                # We have an exception. Tell it to waiting clients, if any.
-                for stream in self.streams:
-                    stream.exception(ex)
-
-                # Terminate loop and closes. Any operations from here on
-                # will result in exceptions.
-                self.close()
-                break
-            else:
-                # We have an event. Tell it to waiting clients, if any.
+                print(event)
                 for stream in self.streams:
                     stream.event_received(event)
+        except Exception as ex:
+            # We have an exception. Tell it to waiting clients, if any.
+            # Note that CancelledError will be propagated to clients as well
+            # if the service gets stopped while they're still consuming events.
+            for stream in self.streams:
+                stream.exception(ex)
+            raise
 
-    def _next_event(self):
-        self._ensure_running()
-
-        if self._pending is None:
-            self._pending = self.aio_loop.create_future()
-
-        return self._pending
-
-    def _ensure_running(self):
-        if not self.running:
-            raise Exception('Modem event loop is not running.')
+    def _graceful_cleanup(self):
+        try:
+            self._writer.transport.close()
+        except:
+            self._reader = self._writer = None
 
     async def _connect(self) -> None:
         try:
@@ -225,13 +186,13 @@ class Modem(object):
         Reads a line from the modem input and analyses it as a :class:`~ModemEvent`. The call will return None
          immediately if there is nothing to read. Otherwise, it will attempt to read a complete line from
          the underlying :class:`SerialDevice`.
-
+    
         Since responses from the modem are terminated with newlines, this means the call should not
         usually block. But hey, modems.
-
+    
         :param discard:
             does not parse lines matching this string (useful for when echo is on).
-
+    
         :return: a :class:`~ModemEvent`.
         :raise StopIteration: if there is nothing to read.
         """
@@ -264,14 +225,23 @@ class Modem(object):
         # Client is not expected to recover from this.
         raise Exception('Unmatched token %s' % line)
 
-    def __enter__(self):
-        self._connect()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
 
 class EventStream(object):
+    """
+    An :class:`EventStream` represents a stream containing all of the events produced
+    by the modem from the point in time at which the stream has been registered. This
+    class should not be instantiated directly, but instead obtained by calling
+    :meth:`Modem.event_stream`.
+
+    :class:`EventStream` instances must be closed with :meth:`EventStream.close` after
+    use. They support Python's "with" protocol (PEP-0343) to facilitate this.
+
+    Streams are asynchronous generators and should be consumed accordingly.
+
+    If the parent modem's event loop is shut down with the stream still attached,
+    iteration will raise a :class:`asyncio.CancelledError` instead of StopIteration.
+    """
+
     def __init__(self, parent: Modem):
         self.parent = parent
         self.has_events = Event(loop=parent.aio_loop)
@@ -303,14 +273,12 @@ class EventStream(object):
 
             # If an exception has been set, it means we
             # aren't getting more events. Bubbles it up to
-            # the client.
+            # the client. Note that if the Modem gets stopped,
+            # we'll get a CanceledError here so this covers the
+            # case where someone calls stop on Modem while there
+            # are still clients consuming events.
             if self.ex:
                 raise self.ex
-
-            # If the parent is no longer running, we aren't
-            # getting more events. Breaks.
-            if not self.parent.running:
-                break
 
             # Otherwise awaits for more events or an exception.
             self.has_events.clear()
@@ -323,31 +291,3 @@ class EventStream(object):
     def exception(self, ex):
         self.ex = ex
         self.has_events.set()
-
-
-def bootstrap_modem(modem: Modem, supervisor: HealthMonitor) -> Tuple[AbstractEventLoop, Thread]:
-    """
-    Utility method for bootstrapping the modem's event loop to run in a separate thread
-    and with :class:`TaskMonitor` monitoring and initializing the modem. This somewhat
-    ad hoc procedure is done here because it is required in multiple places.
-
-    :param modem: The :class:`Modem` instance to bootstrap.
-    :param supervisor: a :class:`TaskMonitor` instance which will supervise threads
-        and coroutines.
-
-    :return: a tuple containing the newly-created :class:`AbstractEventLoop`and the
-            :class:`Thread` it is running in.
-    """
-    # Starts the asyncio loop.
-    aio_loop = asyncio.new_event_loop()
-    loop_thread = supervisor.thread('asyncio event loop', target=aio_loop.run_forever, daemon=True)
-    loop_thread.start()
-
-    # Starts the monitoring loops.
-    modem.aio_loop = aio_loop
-    supervisor.run_coroutine_threadsafe(modem.loop(), 'modem event loop', aio_loop)
-
-    # Synchronously initializes the modem.
-    asyncio.run_coroutine_threadsafe(modem.run_command_set(ModemType.INIT), loop=aio_loop).result()
-
-    return aio_loop, loop_thread

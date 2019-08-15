@@ -8,26 +8,21 @@ import sys
 from asyncio import CancelledError
 from cmd import Cmd
 
-from callblocker.core import healthmonitor
-from callblocker.core.modem import Modem, CX930xx, PySerialDevice, ModemException, ModemEvent, bootstrap_modem
+from callblocker.core import modems
+from callblocker.core.modem import Modem, ModemException, ModemEvent, PySerialDevice
+from callblocker.core.service import AsyncioService, ServiceState, AsyncioEventLoop
 
 
-class BaseModemConsole(Cmd):
+class BaseModemConsole(Cmd, AsyncioService):
     """
     :class:`Cmd` subclass which sets up an asyncio event loop in a separate daemon thread
     at startup and fires a loop that continuously consumes modem events. Also exposes an exit
     command which stops the event loop and quits the console.
     """
 
-    def __init__(self, stdout, device: str, baud_rate: int):
+    def __init__(self, stdout, modem: Modem):
         super().__init__(stdout=stdout)
-
-        supervisor = healthmonitor.monitor()
-        self.modem = Modem(CX930xx, PySerialDevice(device, baud_rate))
-        self.aio_loop, _ = bootstrap_modem(self.modem, supervisor)
-
-        self.stream = self.modem.event_stream()
-        supervisor.run_coroutine_threadsafe(self.loop(), 'console event loop', self.aio_loop, self._handle_loop_death)
+        self.stream = modem.event_stream()
 
     def do_exit(self, _):
         return True
@@ -39,7 +34,7 @@ class BaseModemConsole(Cmd):
         # Subclasses should implement this.
         raise NotImplementedError()
 
-    async def loop(self):
+    async def _event_loop(self):
         try:
             with self.stream as stream:
                 async for event in stream:
@@ -47,18 +42,19 @@ class BaseModemConsole(Cmd):
         except CancelledError:
             pass
 
-    def _handle_loop_death(self, future):
-        exc = future.exception(timeout=1)
-        if exc:
-            print('Modem monitoring loop died with an exception:\n\n %s \n\nExecution aborted.' % str(exc))
+    def _handle_termination(self):
+        super()._handle_termination()
+        status = self.status()
+        if status == ServiceState.ERRORED:
+            print('Modem monitoring loop died with an exception:\n\n %s \n\nExecution aborted.' % str(status.exception))
             # This seems to be the cleanest way to abort a Cmd loop running from Django.
             self.cmdqueue.append('exit')
 
 
 class ModemConsole(BaseModemConsole):
 
-    def __init__(self, stdout, device, baud_rate):
-        super().__init__(stdout=stdout, device=device, baud_rate=baud_rate)
+    def __init__(self, stdout, modem: Modem):
+        super().__init__(stdout=stdout, modem=modem)
 
     def do_lscommand(self, _):
         print('Valid commands are: %s' % ', '.join(self.modem.modem_type.COMMANDS), file=self.stdout)
@@ -102,11 +98,25 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--device', help='The modem device file (defaults to "/dev/ttyACM0").', default='/dev/ttyACM0')
     parser.add_argument('--baud', help='The modem\'s baud rate (defaults to 115200).', default=115200, type=int)
+    parser.add_argument('--modem', help='The model for the modem connected to the '
+                                        'serial port (defaults to CX930xx).')
 
     args = parser.parse_args()
-    ModemConsole(stdout=sys.stdout, device=args.device, baud_rate=args.baud).cmdloop(
-        'Type "help" for available commands.'
+
+    aio_loop = AsyncioEventLoop()
+    aio_loop.start()
+
+    modem = Modem(
+        modems.get_modem(args.modem),
+        PySerialDevice(args.device, args.baud),
+        aio_loop.aio_loop
     )
+    modem.start()
+
+    console = ModemConsole(stdout=sys.stdout, modem=modem)
+    console.start()
+
+    console.cmdloop('Type "help" for available commands.')
 
 
 if __name__ == '__main__':

@@ -25,12 +25,10 @@ MODEM_TYPE = 'CX930xx'
 MODEM_DEVICE = '/dev/ttyACM0'
 #: Device baud rate.
 MODEM_BAUD = 115200
-#: Enable modem debugging.
-MODEM_DEBUG = bool_env('MODEM_DEBUG', 'False')
 #: Use fake modem (will ignore MODEM_DEVICE).
 MODEM_USE_FAKE = bool_env('MODEM_USE_FAKE', 'False')
 #: Telecom operator.
-MODEM_TELCO = 'Vivo'
+MODEM_TELCO_PROVIDER = 'Vivo'
 
 #: API similarity threshold for trigram-similarity-based text searches. It has to be set
 #: to low as we'll otherwise miss searches ,such as single characters, which are common

@@ -1,12 +1,14 @@
 import abc
 import logging
 from abc import abstractmethod
+from asyncio import AbstractEventLoop
 
 from django.db import transaction
 from django.utils import timezone
 
 from callblocker.blocker.models import Caller, Call
 from callblocker.core.modem import Modem, ModemType, ModemEvent
+from callblocker.core.service import AsyncioService
 
 logger = logging.getLogger(__name__)
 
@@ -29,13 +31,17 @@ class TelcoProvider(abc.ABC):
         pass
 
 
-class CallMonitor(object):
-    def __init__(self, provider: TelcoProvider, modem: Modem):
+class CallMonitor(AsyncioService):
+    name = 'call monitor'
+
+    def __init__(self, provider: TelcoProvider, modem: Modem, aio_loop: AbstractEventLoop):
+        super().__init__(aio_loop=aio_loop)
         self.provider = provider
         self.modem = modem
         self.stream = modem.event_stream()
 
-    async def loop(self):
+    async def _event_loop(self):
+        self._startup_event.set()
         with self.stream as stream:
             async for event in stream:
                 await self._process_event(event)
@@ -52,11 +58,11 @@ class CallMonitor(object):
 
         # Looks for blacklisted counterpart:
         try:
-            logger.info('Number %s was found in the phonebook.' % str(number))
             matching = Caller.objects.get(
                 number__endswith=number.number,
                 area_code=number.area_code
             )
+            logger.info('Number %s was found in the phonebook.' % str(number))
         except Caller.objects.model.DoesNotExist:
             logger.info('Number %s is a new number.' % str(number))
             matching = number
