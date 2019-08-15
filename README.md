@@ -114,19 +114,13 @@ _Voilà!_ O bloqueador de chamadas está funcionando!
  do Google) e amigável a dispositivos móveis no outro. O último requisito em particular é fundamental já 
  que eu basicamente acesso o bloqueador de chamadas pelo celular. Alguns screenshots:
  
- Celular
+ Telefone Móvel
  -------
-<div align="center">
-  <div>
-    <img width="300" src="https://gmega.github.io/callblocker/img/recent_callers.png"/>  
-    <p>Chamadas recentes.</p>
-  </div>
-  <div>
-    <img hspace="20" width="300" src="https://gmega.github.io/callblocker/img/phonebook.png"/>
-    <p>Busca na agenda.</p>
-  </div>
-</div>
-
+ 
+ <div align="center">
   
- 
- 
+  Chamadas recentes        |  Busca na agenda
+:-------------------------:|:-------------------------:
+<img width="300" src="https://gmega.github.io/callblocker/img/recent_callers.png"/>    |  <img width="300" src="https://gmega.github.io/callblocker/img/recent_callers.png"/>  
+
+</div>
