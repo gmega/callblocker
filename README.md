@@ -12,10 +12,10 @@ fixo é difícil. A maior parte não suporta bloqueio de chamadas e, os que supo
 que morrem junto com o aparelho. 
 
 Este projeto tenta corrigir isso com um bloqueador de chamadas que oferece uma interface amigável, de modo
-a tornar a inspeção e o bloqueio de números no telefone fixo tão simples quanto no celular (veja [screenshots]()). 
-Para rodar o bloqueador de chamadas, você vai precisar de um pouco de [hardware](). Mas calma: como este projeto 
-foi feito no Brasil, ele usa hardware disponível no mercado brasileiro. Você vai precisar também [instalar]() e 
-[configurar]() o bloqueador.
+a tornar a inspeção e o bloqueio de números no telefone fixo tão simples quanto no celular (veja [screenshots](#screenshots)). 
+Para rodar o bloqueador de chamadas, você vai precisar de um pouco de [hardware](#hardware). Mas calma: como este projeto 
+foi feito no Brasil, ele usa hardware disponível no mercado brasileiro. Você vai precisar também [instalar](#instalação) e 
+[configurar](#configuração) o bloqueador.
 
 Finalmente, se quiser ver alguns screenshots, vá à seção de [screenshots](). 
 
@@ -43,6 +43,9 @@ Para rodar o bloqueador, você vai precisar de:
   
 Depois de montado, o hardware do meu bloqueador ficou com essa cara aqui:
 
+<div align="center">
+  <img width="729" height="547" src="https://gmega.github.io/callblocker/img/hardware_assembly.jpg">
+</div>
 
   
 Instalação
@@ -105,5 +108,25 @@ _Voilà!_ O bloqueador de chamadas está funcionando!
  
  Screenshots
  ===========
+ 
+ A interface do bloqueador de chamadas é baseada no [Material UI](https://material-ui.com/). Isso faz com 
+ que ela seja familar por um lado (o _material design_ no qual ela é baseada é utilizada nos aplicativos
+ do Google) e amigável a dispositivos móveis no outro. O último requisito em particular é fundamental já 
+ que eu basicamente acesso o bloqueador de chamadas pelo celular. Alguns screenshots:
+ 
+ Celular
+ -------
+
+<div align="center">
+    <div>
+        <img src="https://gmega.github.io/callblocker/img/recent_callers.png">
+        <p>Chamadas recentes.</p>
+    </div>
+    <div>
+        <img src="https://gmega.github.io/callblocker/img/phonebook.png">
+        <p>Busca por número e contato na agenda.</p>
+    </div>
+</div>
+  
  
  

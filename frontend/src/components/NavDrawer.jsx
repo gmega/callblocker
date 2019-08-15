@@ -28,6 +28,7 @@ import Routes from '../Routes';
 import StatusContainer from './StatusArea';
 
 const drawerWidth = 240;
+const minCallerListWidth = 390;
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -57,6 +58,7 @@ const useStyles = makeStyles(theme => ({
   },
   content: {
     flexGrow: 1,
+    minWidth: minCallerListWidth,
     padding: theme.spacing(3),
   },
   link: {
