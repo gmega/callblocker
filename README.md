@@ -106,10 +106,12 @@ Se tudo der certo, basta abrir um browser no celular ou Desktop e apontá-lo a:
  
  que você deverá ver uma tela como esta:
  
+ 
  <div align="center">
     <img src="https://gmega.github.io/callblocker/img/no_calls.png">
  </div>
  
+
 _Voilà!_ O bloqueador de chamadas está rodando! Mas isso não quer dizer, claro, que ele esteja funcionando. :-) A melhor
 forma de se assegurar que o bloqueador está de fato funcionando, por hora, é fazer uma ligação para o próprio número. Se
 tudo estiver funcionando, ela deve aparecer no lugar do aviso de que não há chamadas para mostrar.
