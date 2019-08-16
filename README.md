@@ -38,7 +38,7 @@ Para rodar o bloqueador, você vai precisar de:
   Isso inclui boa parte dos modems USB mais baratos disponíveis no [Mercado Livre](https://www.mercadolivre.com.br/)
   e que dizem suportar identificação de chamadas. Infelizmente, os vendedores desse tipo 
   de produto (barato, chinês e sem marca) tipicamente não sabem responder qual o chipset do modem, então o jeito é 
-  comprar e ver o que aparece. Adaptar o bloqueador a outros modens é simples mas, de novo, eu não tenho outros modelos 
+  comprar e ver o que aparece. Adaptar o bloqueador a outros modems é simples mas, de novo, eu não tenho outros modelos 
   para poder testar.
     
 * **Um conversor de DTMF para FSK (talvez).** Também disponível no Mercado Livre a preços que vão de 30 a 150 reais.
@@ -60,7 +60,7 @@ Instalação
 Uma vez montado o hardware e carregado o sistema operacional do Raspberry Pi (eu estou usando o 
 [Raspbian Buster](https://www.raspberrypi.org/downloads/raspbian/)), o jeito mais simples de instalar o bloqueador 
 é utilizando o [Docker](https://www.docker.com/). Instalar o Docker no Raspbian é fácil e existem inúmeros artigos na 
-Internet descrevendo o procedimento; por exemplo, [este artigo em português](https://www.filipeflop.com/).
+Internet descrevendo o procedimento; por exemplo, [este artigo em português](https://www.filipeflop.com/blog/containers-docker-com-raspberry-pi/).
 
 Você vai precisar também do [docker-compose](https://docs.docker.com/compose/). A forma mais fácil que conheço de instalá-lo no 
  Raspbian é usando o [pip](https://en.wikipedia.org/wiki/Pip_%28package_manager%29). Para isso, basta executar, num terminal:
