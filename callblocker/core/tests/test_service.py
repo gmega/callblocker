@@ -7,7 +7,7 @@ from callblocker.core.tests.utils import await_predicate
 
 
 class BuggyAsyncService(AsyncioService):
-    name = 'buggy asyncio'
+    default_name = 'buggy asyncio'
 
     def __init__(self, aio_loop):
         super().__init__(aio_loop)
@@ -31,7 +31,7 @@ class BuggyAsyncService(AsyncioService):
 
 
 class BuggyThreadedService(ThreadedService):
-    name = 'buggy threaded'
+    default_name = 'buggy threaded'
 
     def __init__(self):
         super().__init__()

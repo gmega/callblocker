@@ -32,7 +32,7 @@ class TelcoProvider(abc.ABC):
 
 
 class CallMonitor(AsyncioService):
-    name = 'call monitor'
+    default_name = 'call monitor'
 
     def __init__(self, provider: TelcoProvider, modem: Modem, aio_loop: AbstractEventLoop):
         super().__init__(aio_loop=aio_loop)

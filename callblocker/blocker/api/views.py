@@ -16,10 +16,9 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_202_ACCEPTED
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework_bulk import BulkUpdateModelMixin, BulkDestroyModelMixin
 
+from callblocker.blocker.services import services
 from callblocker.blocker.api.serializers import CallerSerializer, CallSerializer, CallerPOSTSerializer, SourceSerializer
 from callblocker.blocker.models import Caller, Call, Source
-from callblocker.core.modem import Modem
-from callblocker.core.serviceregistry import registry
 
 
 class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
@@ -147,7 +146,7 @@ class SourceViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
 
 @api_view(['GET'])
 def health_status(request):
-    return Response(registry().health())
+    return Response(services().health())
 
 
 @api_view(['POST'])
@@ -158,7 +157,7 @@ def modem(request):
     if not command:
         return Response(data={'error': 'command missing'}, status=HTTP_400_BAD_REQUEST)
 
-    the_modem = registry().services[Modem.name]
+    the_modem = services().modem
     asyncio.run_coroutine_threadsafe(the_modem.async_command(command), loop=the_modem.aio_loop)
 
     return Response(status=HTTP_202_ACCEPTED)

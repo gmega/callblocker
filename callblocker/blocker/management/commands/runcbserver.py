@@ -1,6 +1,8 @@
+from django.conf import settings
 from django.core.management import BaseCommand, call_command
 
 from callblocker import blocker
+from callblocker.blocker import BootstrapMode
 
 
 class Command(BaseCommand):
@@ -15,7 +17,11 @@ class Command(BaseCommand):
         # Sigh. This has to be put here as otherwise BaseCommand
         # will go for urls.py before we had a chance to toggle the flag.
         # Damn this freaking hack.
-        blocker.enable()
+        blocker.bootstrap_mode(
+            BootstrapMode.FAKE_SERVER
+            if settings.MODEM_USE_FAKE
+            else BootstrapMode.SERVER
+        )
 
         super().execute(*args, **options)
 

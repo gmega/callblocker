@@ -1,28 +1,29 @@
 import re
 from typing import Union
 
+from django.conf import settings
 from django.core.management import BaseCommand
 from django.utils import timezone
 
 from callblocker import blocker
+from callblocker.blocker import BootstrapMode, services
 from callblocker.blocker.models import Caller, Source, Call
-from callblocker.core import serviceregistry
 from callblocker.core.console import BaseModemConsole
-from callblocker.core.modem import Modem
 
 
 class Command(BaseCommand):
     help = 'Starts the call monitor console app.'
 
     def handle(self, *args, **options):
-        blocker.enable()
-
-        from callblocker.blocker import bootstrap
-        bootstrap.bootstrap()
+        blocker.bootstrap_mode(
+            BootstrapMode.FAKE_SERVER
+            if settings.MODEM_USE_FAKE
+            else BootstrapMode.SERVER
+        )
 
         Console(
             stdout=self.stdout,
-            modem=serviceregistry.registry().services[Modem.name]
+            modem=services.services().modem
         ).cmdloop('Type "help" to see available commands.')
 
 

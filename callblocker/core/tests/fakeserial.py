@@ -71,7 +71,7 @@ class ScriptedModem(SerialDeviceFactory, Protocol, AsyncioService):
     this command).
     """
 
-    name = 'fake modem'
+    default_name = 'fake modem'
 
     def __init__(self, aio_loop: AbstractEventLoop, command_mode=False):
         AsyncioService.__init__(self, aio_loop)

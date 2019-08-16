@@ -7,7 +7,7 @@ Introdução
 
 O problema das chamadas indesejadas é uma questão mundial e no Brasil isso não é diferente. Um [relatório da First Orion](
 https://firstorion.com/nearly-50-of-u-s-mobile-traffic-will-be-scam-calls-by-2019/) estima que, em 2019, quase _metade_
-das chamadas telefônicas que recebemos serão chamadas indesejadas (de telemarketing ou golpistas). Enquanto os 
+das chamadas telefônicas recebidas nos Estados Unidos serão chamadas indesejadas (de telemarketing ou golpistas). Enquanto os 
  _smartphones_ modernos nos dão instrumentos para ao menos bloquear chamadas de números que já se demonstraram indesejáveis, 
  os telefones fixos ficaram presos no passado: a maior parte dos aparelhos sequer suporta o bloqueio de chamadas e, dentre os 
  que suportam, interfaces arcaicas e dados que morrem junto com o aparelho são a norma. 
@@ -69,7 +69,21 @@ Você vai precisar também do [docker-compose](https://docs.docker.com/compose/)
 > sudo pip install docker-compose
 ```
 
-Você então vai ter que compilar a imagem do bloqueador com o Docker:
+Você então vai ter que compilar a imagem do bloqueador com o Docker. Para tanto, basta baixar a versão mais atual
+do bloqueador:
+
+```sh
+> wget -O master.tar.gz https://github.com/gmega/callblocker/tarball/master
+```
+
+e extraí-la com:
+
+```sh
+> tar xzvf master.tar.gz
+```
+
+Isso vai criar um novo diretório contendo o código do bloqueador. Você deve então entrar nesse diretório
+e rodar o _build_ do Docker:
 
 ```sh
 > docker build -t callblocker:latest --build-arg BUILD_RPI=1 .
@@ -88,7 +102,9 @@ Para configurar o bloqueador no Raspbian você vai precisar saber:
   local é fixar o endereço do Raspberry no DHCP do seu roteador, ou usar um DNS 
   dinâmico gratuito tipo o [Duck DNS](https://www.duckdns.org/). Aqui em casa usamos o Duck DNS.
 
-Com essa lista na mão, para iniciar o bloqueador basta rodar:
+Com essa lista na mão, para iniciar o bloqueador basta rodar, a partir da raíz do diretório criado durante a 
+[instalação](#Instalação):
+
 ```sh
 > HOST_MODEM_DEVICE='/dev/ttyACM0' \
 HOST_API_ADDRESSES='192.167.1.163,cblocker.duckdns.org' \

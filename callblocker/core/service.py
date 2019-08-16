@@ -97,13 +97,18 @@ class BaseService(Service):
     """Base implementation for a service which runs on a separate thread, possibly as part of an
     asyncio event loop."""
 
-    def __init__(self):
+    def __init__(self, name=None):
+        self._name = self.default_name if name is None else name
         self._error = {}
         self._state = ServiceState.INITIAL
 
         # We don't need asyncio events as the waiting will always be blocking.
         self._startup_event = Event()
         self._shutdown_event = Event()
+
+    @property
+    def name(self):
+        return self._name
 
     @synchronized
     def start(self, timeout=None) -> Service:
@@ -180,6 +185,11 @@ class BaseService(Service):
     def status(self) -> ServiceStatus:
         return ServiceStatus(self._state, **self._error)
 
+    @abstractproperty
+    def default_name(self) -> str:
+        """Services must define a default name which will be used when no name is supplied."""
+        pass
+
     @abstractmethod
     def _start_event_loop(self, on_termination: Callable[[], None]):
         """
@@ -242,8 +252,8 @@ class AsyncioService(BaseService):
     set _startup_event as part of event loop initialization.
     """
 
-    def __init__(self, aio_loop: AbstractEventLoop):
-        super().__init__()
+    def __init__(self, aio_loop: AbstractEventLoop, name: str = None):
+        super().__init__(name=name)
         self.aio_loop = aio_loop
         self.future = None
 
@@ -281,11 +291,15 @@ class ThreadedService(BaseService):
     set _startup_event as part of event loop initialization.
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name: str = None):
+        super().__init__(name=name)
 
     def _start_event_loop(self, callback):
-        self.thread = Thread(target=self._wrap_loop(callback), name=f'{self.name} event loop')
+        self.thread = Thread(
+            target=self._wrap_loop(callback),
+            name=f'{self.name} event loop',
+            daemon=True
+        )
         self.thread.start()
 
     def _wrap_loop(self, callback):
@@ -309,10 +323,10 @@ class AsyncioEventLoop(ThreadedService):
     """
     A :class:`ThreadedService` which spawns an asyncio event loop in a separate thread.
     """
-    name = 'asyncio'
+    default_name = 'asyncio'
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, name=None):
+        super().__init__(name=name)
         self._aio_loop = None
 
     def _event_loop(self):
@@ -335,8 +349,20 @@ class AsyncioEventLoop(ThreadedService):
 
             await asyncio.gather(*tasks)
 
-        asyncio.run_coroutine_threadsafe(cancel_tasks(), self.aio_loop).result()
-        self.aio_loop.call_soon_threadsafe(self.aio_loop.stop)
+        # Calling stop directly from cancel_tasks causes things to hang.
+        # So we call it from here, after all tasks had a chance to be
+        # cancelled, and do not expect the loop to do anything else after
+        # that.
+        def stop_loop(_):
+            self.aio_loop.call_soon_threadsafe(self.aio_loop.stop)
+            self._shutdown_event.set()
+
+        # Some contortionism is needed.
+        asyncio.run_coroutine_threadsafe(
+            cancel_tasks(), self.aio_loop
+        ).add_done_callback(
+            stop_loop
+        )
 
     @property
     def aio_loop(self) -> AbstractEventLoop:

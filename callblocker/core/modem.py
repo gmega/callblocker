@@ -78,7 +78,7 @@ class PySerialDevice(SerialDeviceFactory):
 
 
 class Modem(AsyncioService):
-    name = 'modem'
+    default_name = 'modem'
 
     def __init__(self,
                  modem_type: ModemType,
