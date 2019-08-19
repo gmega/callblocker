@@ -37,7 +37,7 @@ def test_parses_events(fake_serial, aio_loop):
         return events
 
     try:
-        modem.start()
+        modem.sync_start()
         actual = asyncio.run_coroutine_threadsafe(collect(), loop=loop).result()
         assert actual == expected
     finally:
@@ -52,7 +52,7 @@ def test_sync_command(fake_serial, aio_loop):
 
     loop = aio_loop.aio_loop
     modem = Modem(modem_type=CX930xx_fake, device_factory=fake_serial, aio_loop=loop)
-    modem.start()
+    modem.sync_start()
     asyncio.run_coroutine_threadsafe(modem.sync_command('ATZ'), loop=loop).result()
     asyncio.run_coroutine_threadsafe(modem.sync_command('AT+VCID=1'), loop=loop).result()
     status = modem.status()

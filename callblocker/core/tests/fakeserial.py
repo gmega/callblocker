@@ -71,7 +71,7 @@ class ScriptedModem(SerialDeviceFactory, Protocol, AsyncioService):
     this command).
     """
 
-    default_name = 'fake modem'
+    name = 'fake modem'
 
     def __init__(self, aio_loop: AbstractEventLoop, command_mode=False):
         AsyncioService.__init__(self, aio_loop)
@@ -185,7 +185,7 @@ class ScriptedModem(SerialDeviceFactory, Protocol, AsyncioService):
     # ------------------- Management methods ----------------------------------
 
     async def _event_loop(self):
-        self._startup_event.set()
+        self._signal_started()
         # If the queue is empty and we're not in command mode,
         # we're done.
         while (not self.script.empty()) or self.command_mode:

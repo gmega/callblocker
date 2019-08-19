@@ -13,9 +13,9 @@ from callblocker.core import modems
 from callblocker.core.modem import Modem, PySerialDevice
 from callblocker.core.service import AsyncioEventLoop
 from callblocker.core.servicegroup import ServiceGroupSpec, ServiceGroup
-#: Server mode services.
 from callblocker.core.tests.fakeserial import CX930xx_fake, ScriptedModem
 
+#: Server mode services.
 server = ServiceGroupSpec(
     aio_loop=lambda _: (
         AsyncioEventLoop()

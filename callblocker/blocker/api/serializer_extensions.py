@@ -1,7 +1,8 @@
 from functools import reduce
 
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import SkipField, Field
+from rest_framework.fields import SkipField, Field, ChoiceField
+from rest_framework.serializers import Serializer
 from rest_framework.settings import api_settings
 from rest_framework.utils import html
 from rest_framework_bulk import BulkListSerializer
@@ -9,6 +10,7 @@ from rest_framework_bulk import BulkListSerializer
 
 # We have to patch BulkListSerializer to deal with https://github.com/miki725/django-rest-framework-bulk/issues/68
 # This may break with newer versions of restframework, so it would be nice to get rid of it, eventually.
+
 
 class PatchedBulkListSerializer(BulkListSerializer):
     def to_internal_value(self, data):
@@ -59,6 +61,22 @@ class PatchedBulkListSerializer(BulkListSerializer):
         return ret
 
 
+class EnumField(ChoiceField):
+    def __init__(self, enum, **kwargs):
+        self.enum = enum
+        kwargs['choices'] = [(e.value, e.name) for e in enum]
+        super(EnumField, self).__init__(**kwargs)
+
+    def to_representation(self, obj):
+        return obj.name
+
+    def to_internal_value(self, data):
+        try:
+            return self.enum[data]
+        except KeyError:
+            self.fail('invalid_choice', input=data)
+
+
 class GeneratedCharField(Field):
 
     def __init__(self, fields, fun=lambda x, y: x + y, **kwargs):
@@ -87,3 +105,23 @@ class GeneratedCharField(Field):
 
     def to_representation(self, value):
         return value
+
+
+class ExceptionField(Field):
+    def __init__(self, **kwargs):
+        # Our typical use case for Exceptions is reporting. Clients are not usually
+        # allowed to set them.
+        kwargs['read_only'] = True
+        super().__init__(**kwargs)
+
+    def to_representation(self, value):
+        # Well... can't get any simpler than this.
+        return f'{type(value).__name__}: {str(value)}'
+
+
+class ROSerializer(Serializer):
+    def create(self, validated_data):
+        raise NotImplemented('Cannot create readonly objects.')
+
+    def update(self, instance, validated_data):
+        raise NotImplemented('Cannot update readonly objects.')

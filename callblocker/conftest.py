@@ -30,6 +30,6 @@ def api_client():
 @pytest.fixture()
 def aio_loop():
     loop = AsyncioEventLoop()
-    loop.start()
+    loop.sync_start()
     yield loop
-    loop.stop(10)
+    loop.sync_stop(10)

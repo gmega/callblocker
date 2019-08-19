@@ -43,11 +43,16 @@ nested_router.register(
     basename='caller-calls'
 )
 
+bulk_router.register(
+    r'services',
+    api_views.ServicesViewset,
+    basename='services'
+)
+
 urlpatterns = [
     url(r'^api/', include(bulk_router.urls)),
     url(r'^api/', include(nested_router.urls)),
     path('api/modem/', api_views.modem),
-    path('api/status/', api_views.health_status),
     path('admin/', admin.site.urls)
 ]
 

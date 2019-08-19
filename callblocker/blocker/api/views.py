@@ -5,20 +5,24 @@ from django.contrib.postgres.search import TrigramSimilarity
 from django.db.models import Count, Value, FloatField
 from django.db.models import Q
 from django.db.models.functions import Greatest, Lower
+from django.http import Http404
+from rest_framework import status
 from rest_framework.decorators import api_view, parser_classes
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import ValidationError, APIException
 from rest_framework.generics import get_object_or_404
 from rest_framework.mixins import RetrieveModelMixin, ListModelMixin
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_202_ACCEPTED
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet, ViewSet
 from rest_framework_bulk import BulkUpdateModelMixin, BulkDestroyModelMixin
 
-from callblocker.blocker.services import services
-from callblocker.blocker.api.serializers import CallerSerializer, CallSerializer, CallerPOSTSerializer, SourceSerializer
+from callblocker.blocker.api.serializers import CallerSerializer, CallSerializer, CallerPOSTSerializer, \
+    SourceSerializer, ServiceSerializer
 from callblocker.blocker.models import Caller, Call, Source
+from callblocker.blocker.services import services
+from callblocker.core.service import ServiceState
 
 
 class CallerViewSet(ModelViewSet, BulkUpdateModelMixin, BulkDestroyModelMixin):
@@ -144,9 +148,55 @@ class SourceViewSet(ListModelMixin, RetrieveModelMixin, GenericViewSet):
     queryset = Source.objects.all()
 
 
-@api_view(['GET'])
-def health_status(request):
-    return Response(services().health())
+class ServicesViewset(ViewSet):
+    serializer_class = ServiceSerializer
+    parser_classes = [JSONParser]
+
+    # The user can either start or terminate a service. Nothing else.
+    ALLOWED_TARGET_STATES = [ServiceState.READY, ServiceState.TERMINATED]
+
+    def list(self, _):
+        return Response(ServiceSerializer(instance=services().services, many=True).data)
+
+    def retrieve(self, _, pk):
+        service = self._get_service_or_404(pk)
+        return Response(ServiceSerializer(instance=service).data)
+
+    def partial_update(self, request, pk):
+        service = self._get_service_or_404(pk)
+        content = request.data
+
+        try:
+            target = self._get_or_400(content, 'status', 'state')
+            target = ServiceState[target.upper()]
+        except KeyError:
+            return Response(f'Invalid target state {target}.', status=status.HTTP_400_BAD_REQUEST)
+
+        if target not in self.ALLOWED_TARGET_STATES:
+            return Response(f'Cannot set service to {target}.')
+
+        # Either start or stop.
+        if target == ServiceState.READY:
+            service.start()
+        elif target == ServiceState.TERMINATED:
+            service.stop()
+        else:
+            # Should never happen.
+            raise Exception(f'Bad target state {target}.')
+
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+    def _get_or_400(self, content, *path):
+        element = path[0]
+        if element not in content:
+            raise APIException(detail=f'Missing element {element} in {str(content)}')
+        return self._get_or_400(content[element], *path[1:]) if len(path) > 1 else content[element]
+
+    def _get_service_or_404(self, pk):
+        service = getattr(services(), pk, None)
+        if service is None:
+            raise Http404(f'No services match {pk}.')
+        return service
 
 
 @api_view(['POST'])

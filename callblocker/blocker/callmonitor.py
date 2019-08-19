@@ -32,7 +32,7 @@ class TelcoProvider(abc.ABC):
 
 
 class CallMonitor(AsyncioService):
-    default_name = 'call monitor'
+    name = 'call monitor'
 
     def __init__(self, provider: TelcoProvider, modem: Modem, aio_loop: AbstractEventLoop):
         super().__init__(aio_loop=aio_loop)
@@ -41,7 +41,7 @@ class CallMonitor(AsyncioService):
         self.stream = modem.event_stream()
 
     async def _event_loop(self):
-        self._startup_event.set()
+        self._signal_started()
         with self.stream as stream:
             async for event in stream:
                 await self._process_event(event)

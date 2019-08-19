@@ -5,8 +5,9 @@ modem command routines.
 import argparse
 import asyncio
 import sys
-from asyncio import CancelledError
+from asyncio import CancelledError, AbstractEventLoop
 from cmd import Cmd
+from typing import Optional
 
 from callblocker.core import modems
 from callblocker.core.modem import Modem, ModemException, ModemEvent, PySerialDevice
@@ -20,8 +21,11 @@ class BaseModemConsole(Cmd, AsyncioService):
     command which stops the event loop and quits the console.
     """
 
-    def __init__(self, stdout, modem: Modem):
-        super().__init__(stdout=stdout)
+    name = 'modem console'
+
+    def __init__(self, stdout, modem: Modem, aio_loop: AbstractEventLoop):
+        Cmd.__init__(self, stdout=stdout)
+        AsyncioService.__init__(self, aio_loop=aio_loop)
         self.stream = modem.event_stream()
 
     def do_exit(self, _):
@@ -42,8 +46,8 @@ class BaseModemConsole(Cmd, AsyncioService):
         except CancelledError:
             pass
 
-    def _handle_termination(self):
-        super()._handle_termination()
+    def _signal_terminated(self):
+        super()._signal_terminated()
         status = self.status()
         if status == ServiceState.ERRORED:
             print('Modem monitoring loop died with an exception:\n\n %s \n\nExecution aborted.' % str(status.exception))
@@ -53,8 +57,8 @@ class BaseModemConsole(Cmd, AsyncioService):
 
 class ModemConsole(BaseModemConsole):
 
-    def __init__(self, stdout, modem: Modem):
-        super().__init__(stdout=stdout, modem=modem)
+    def __init__(self, stdout, modem: Modem, aio_loop: AbstractEventLoop):
+        super().__init__(stdout=stdout, modem=modem, aio_loop=aio_loop)
 
     def do_lscommand(self, _):
         print('Valid commands are: %s' % ', '.join(self.modem.modem_type.COMMANDS), file=self.stdout)
@@ -113,7 +117,7 @@ def main():
     )
     modem.start()
 
-    console = ModemConsole(stdout=sys.stdout, modem=modem)
+    console = ModemConsole(stdout=sys.stdout, modem=modem, aio_loop=aio_loop.aio_loop)
     console.start()
 
     console.cmdloop('Type "help" for available commands.')

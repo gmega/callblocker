@@ -7,6 +7,7 @@ class BootstrapMode(Enum):
     SERVER = 'server'
     FAKE_SERVER = 'fake_server'
     COMMAND = 'command'
+    CUSTOM = 'custom'
 
 
 #: This is an ugly hack. See the blocker.bootstrap module documentation for more information.

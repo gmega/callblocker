@@ -7,7 +7,7 @@ from callblocker.core.tests.utils import await_predicate
 
 
 class BuggyAsyncService(AsyncioService):
-    default_name = 'buggy asyncio'
+    name = 'buggy asyncio'
 
     def __init__(self, aio_loop):
         super().__init__(aio_loop)
@@ -24,14 +24,14 @@ class BuggyAsyncService(AsyncioService):
     async def _event_loop(self):
         self.should_error = False
         self.running.clear()
-        self._startup_event.set()
+        self._signal_started()
         await self.running.wait()
         if self.should_error:
             raise Exception("Oh I'm so buggy.")
 
 
 class BuggyThreadedService(ThreadedService):
-    default_name = 'buggy threaded'
+    name = 'buggy threaded'
 
     def __init__(self):
         super().__init__()
@@ -45,7 +45,7 @@ class BuggyThreadedService(ThreadedService):
     def _event_loop(self):
         self.should_error = False
         self.running.clear()
-        self._startup_event.set()
+        self._signal_started()
         # Waits till stop or die.
         self.running.wait()
         if self.should_error:
@@ -65,9 +65,9 @@ def test_threaded_service():
 
 def service_test(service: BaseService):
     assert service.status().state == ServiceState.INITIAL
-    service.start()
+    service.sync_start(10)
 
-    # Start is synchronous so we should see this immediately.
+    # We did a synchronous start so we should see this immediately.
     assert service.status().state == ServiceState.READY
 
     service.die()
@@ -83,9 +83,10 @@ def service_test(service: BaseService):
     assert service.status().exception.args[0] == "Oh I'm so buggy."
 
     # Restarting the service should bring it back to running.
-    service.start()
-    assert service.status().state == ServiceState.READY
+    service.sync_start()
 
+    assert service.status().state == ServiceState.READY
+    service.startup.wait(10)
     # Trying to start a started service should cause an exception.
     try:
         # Trying to stop a dead service should raise an exception.
@@ -94,9 +95,9 @@ def service_test(service: BaseService):
         pass
 
     # Normal termination.
-    service.stop()
+    service.sync_stop(10)
 
-    # Since stop is synchronous, we should see the correct state.
+    # Since we did a synchronous stop, we should see the correct state.
     assert service.status().state == ServiceState.TERMINATED
     assert service.status().exception is None
     assert service.status().traceback is None

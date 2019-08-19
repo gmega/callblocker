@@ -78,7 +78,7 @@ class PySerialDevice(SerialDeviceFactory):
 
 
 class Modem(AsyncioService):
-    default_name = 'modem'
+    name = 'modem'
 
     def __init__(self,
                  modem_type: ModemType,
@@ -153,7 +153,7 @@ class Modem(AsyncioService):
         # Connects to the modem.
         await self._connect()
         # Service is ready.
-        self._startup_event.set()
+        self._signal_started()
         try:
             while True:
                 event = await self._read_event()

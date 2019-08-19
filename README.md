@@ -44,8 +44,8 @@ Para rodar o bloqueador, você vai precisar de:
 * **Um conversor de DTMF para FSK (talvez).** Também disponível no Mercado Livre a preços que vão de 30 a 150 reais.
   Eu tenho uma linha fixa tradicional da [Vivo](https://www.vivo.com.br) (i.e., não é aquela linha que brota do Vivo 
   fibra) e, nessas linhas, a Vivo utiliza modulação DTMF para a identificação de chamadas. A 
-  [Wikipedia](https://en.wikipedia.org/wiki/Caller_ID) no entanto aponta que outras operadoras podem usar outros 
-  padrões (FSK e V23 FSK), então o conversor pode não ser necessário no seu caso.
+  [Wikipedia](https://en.wikipedia.org/wiki/Caller_ID) no entanto aponta que outras operadoras **no Brasil** 
+  podem usar outros padrões (FSK e V23 FSK), então o conversor pode não ser necessário no seu caso.
   
 Depois de montado, o hardware do meu bloqueador ficou com essa cara aqui:
 
@@ -135,6 +135,9 @@ Se tudo der certo, basta abrir um browser no celular ou Desktop e apontá-lo a:
 _Voilà!_ O bloqueador de chamadas está rodando! Mas isso não quer dizer, claro, que ele esteja funcionando. :-) A melhor
 forma de se assegurar que o bloqueador está de fato funcionando, por hora, é fazer uma ligação para o próprio número. Se
 tudo estiver funcionando, ela deve aparecer no lugar do aviso de que não há chamadas para mostrar.
+
+Note que o Docker vai se encarregar de inicializar o bloqueador novamente toda vez que o Raspberry Pi for reiniciado, 
+então você não precisa se preocupar com criar scripts de inicialização (se é que estava preocupado ;-)).
 
 Limitações
 ==========

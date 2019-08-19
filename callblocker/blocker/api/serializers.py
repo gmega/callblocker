@@ -4,8 +4,10 @@ from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializ
 from rest_framework.validators import UniqueValidator
 from rest_framework_bulk import BulkSerializerMixin
 
-from callblocker.blocker.api.serializer_extensions import GeneratedCharField, PatchedBulkListSerializer
+from callblocker.blocker.api.serializer_extensions import GeneratedCharField, PatchedBulkListSerializer, EnumField, \
+    ExceptionField, ROSerializer
 from callblocker.blocker.models import Call, Source, Caller
+from callblocker.core.service import ServiceState
 
 
 class CallSerializer(ModelSerializer):
@@ -101,3 +103,15 @@ class CallerPOSTSerializer(ModelSerializer):
         if validated_data.get('source') is None:
             validated_data['source'] = Source.predef_source(Source.USER)
         return super().create(validated_data)
+
+
+class ServiceStatusSerializer(ROSerializer):
+    state = EnumField(ServiceState)
+    exception = ExceptionField()
+    traceback = serializers.CharField()
+
+
+class ServiceSerializer(ROSerializer):
+    id = serializers.CharField(max_length=20)
+    name = serializers.CharField(max_length=80)
+    status = ServiceStatusSerializer()
