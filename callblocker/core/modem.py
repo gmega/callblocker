@@ -157,7 +157,6 @@ class Modem(AsyncioService):
         try:
             while True:
                 event = await self._read_event()
-                print(event)
                 for stream in self.streams:
                     stream.event_received(event)
         except Exception as ex:

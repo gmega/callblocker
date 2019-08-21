@@ -25,7 +25,7 @@ import {connect} from 'react-redux';
 import {Link} from 'react-router-dom';
 import type {ApplicationState} from '../reducers/index';
 import Routes from '../Routes';
-import StatusContainer from './StatusArea';
+import StatusContainer from './StatusContainer';
 
 const drawerWidth = 240;
 const minCallerListWidth = 390;

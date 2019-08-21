@@ -6,7 +6,7 @@ import {Dispatch} from 'react-redux';
 import {API_PARAMETERS} from '../components/APIConfig';
 
 import {camelize, snakeize} from '../helpers';
-import type {Call, Caller, CallerDelta, NewCaller} from '../types/domainTypes';
+import type {Call, Caller, CallerDelta, NewCaller, Service, ServiceDelta, ServiceStateType} from '../types/domainTypes';
 
 // --------------------- Async Requests ---------------------------------------
 
@@ -81,9 +81,19 @@ FORMATTERS[FETCH_CALLS] = ({
 });
 export type FetchCallsRequest = GenericApiRequest<'FETCH_CALLS', Caller, Array<Call>>;
 
+export const FETCH_SERVICES = 'FETCH_SERVICES';
+FORMATTERS[FETCH_SERVICES] = ({
+  success: undefined,
+  failure: {
+    message: (input: void, reason: string) => `Error fetching services from backend server (${reason})`
+  }
+});
+export type FetchServicesRequest = GenericApiRequest<'FETCH_SERVICES', void, Array<Service>>;
+
 export type FetchRequest =
   FetchCallersRequest |
-  FetchCallsRequest
+  FetchCallsRequest |
+  FetchServicesRequest
 
 // ------------------------------------------- Async Lists --------------------
 /* An "async list" is a list which can be fetched and refreshed
@@ -199,7 +209,6 @@ export type PatchCallerRequest = {|
   ...AsyncRequest<Array<CallerDelta>, void>
 |};
 
-
 export const CREATE_CALLER = 'CREATE_CALLER';
 FORMATTERS[CREATE_CALLER] = ({
   success: {
@@ -209,15 +218,28 @@ FORMATTERS[CREATE_CALLER] = ({
     message: (input: NewCaller, reason: string) => `Failed to add new caller (${reason}).`
   }
 }: StatusMessageFormatter<NewCaller, void>);
-
 export type CreateCallerRequest = {|
   type: 'CREATE_CALLER',
   ...AsyncRequest<NewCaller, void>
 |};
 
+export const PATCH_SERVICE = 'PATCH_SERVICE';
+FORMATTERS[PATCH_SERVICE] = ({
+  failure: {
+    message: (input: ServiceDelta, reason: string) =>
+      `Failed to set new state for service ${input.original.name} (${reason}).`
+  }
+}: StatusMessageFormatter<ServiceDelta, void>);
+export type PatchServiceRequest = {|
+  type: 'PATCH_SERVICE',
+  ...AsyncRequest<ServiceDelta, void>
+|}
+
+
 export type WriteRequest =
   PatchCallerRequest |
-  CreateCallerRequest;
+  CreateCallerRequest |
+  PatchServiceRequest;
 
 // --------------------------- Other Actions ----------------------------------
 
@@ -338,6 +360,46 @@ export function fetchCalls(
       (object: Object) => (camelize(object): Call),
       retry ? RETRY_UNTIL_SUCCESS : NO_RETRY
     )
+}
+
+// ---------------------- Actions on Services ---------------------------------
+
+export function fetchServices(
+  retry: boolean = false
+): Promise<Response> {
+  return (dispatch: Dispatch) =>
+    apiRequest(
+      `${API_PARAMETERS.endpoint()}api/services/`,
+      {},
+      ({
+        type: FETCH_SERVICES,
+        status: PENDING,
+        source: undefined
+      }: FetchServicesRequest),
+      dispatch,
+      (object: Object) => (camelize(object): Service),
+      retry ? RETRY_UNTIL_SUCCESS : NO_RETRY
+    )
+}
+
+export function modifyService(
+  delta: ServiceDelta
+): Promise<Response> {
+  return (dispatch: Dispatch) =>
+    apiRequest(
+      `${API_PARAMETERS.endpoint()}api/services/${delta.original.id}/`,
+      {
+        headers: {'Content-Type': 'application/json'},
+        method: 'PATCH',
+        body: JSON.stringify({status: delta.status})
+      },
+      ({
+        type: PATCH_SERVICE,
+        status: PENDING,
+        source: delta
+      }: PatchServiceRequest),
+      dispatch
+    );
 }
 
 // ---------------------- Other Actions ---------------------------------------

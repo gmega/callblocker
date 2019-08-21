@@ -8,7 +8,7 @@ from django.db.models.functions import Greatest, Lower
 from django.http import Http404
 from rest_framework import status
 from rest_framework.decorators import api_view, parser_classes
-from rest_framework.exceptions import ValidationError, APIException
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.mixins import RetrieveModelMixin, ListModelMixin
 from rest_framework.pagination import LimitOffsetPagination
@@ -18,6 +18,7 @@ from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_202_ACCEPTED
 from rest_framework.viewsets import ModelViewSet, GenericViewSet, ViewSet
 from rest_framework_bulk import BulkUpdateModelMixin, BulkDestroyModelMixin
 
+from callblocker.blocker.api.exceptions import BadRequest400
 from callblocker.blocker.api.serializers import CallerSerializer, CallSerializer, CallerPOSTSerializer, \
     SourceSerializer, ServiceSerializer
 from callblocker.blocker.models import Caller, Call, Source
@@ -164,10 +165,10 @@ class ServicesViewset(ViewSet):
 
     def partial_update(self, request, pk):
         service = self._get_service_or_404(pk)
-        content = request.data
+        data = request.data
 
         try:
-            target = self._get_or_400(content, 'status', 'state')
+            target = self._get_element_or_400(data, 'status', 'state')
             target = ServiceState[target.upper()]
         except KeyError:
             return Response(f'Invalid target state {target}.', status=status.HTTP_400_BAD_REQUEST)
@@ -184,13 +185,13 @@ class ServicesViewset(ViewSet):
             # Should never happen.
             raise Exception(f'Bad target state {target}.')
 
-        return Response(status=status.HTTP_202_ACCEPTED)
+        return Response(status=status.HTTP_202_ACCEPTED, data='{"status": "accepted"}', content_type='application/json')
 
-    def _get_or_400(self, content, *path):
+    def _get_element_or_400(self, content, *path):
         element = path[0]
         if element not in content:
-            raise APIException(detail=f'Missing element {element} in {str(content)}')
-        return self._get_or_400(content[element], *path[1:]) if len(path) > 1 else content[element]
+            raise BadRequest400(detail=f'Missing element {element} in {str(content)}')
+        return self._get_element_or_400(content[element], *path[1:]) if len(path) > 1 else content[element]
 
     def _get_service_or_404(self, pk):
         service = getattr(services(), pk, None)

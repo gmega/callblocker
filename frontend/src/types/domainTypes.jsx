@@ -44,3 +44,32 @@ export type Call = {|
   +blocked: boolean,
   +time: string
 |};
+
+
+export const ServiceState = Object.freeze({
+  INITIAL: 'INITIAL',
+  STARTING: 'STARTING',
+  READY: 'READY',
+  STOPPING: 'STOPPING',
+  TERMINATED: 'TERMINATED',
+  ERRORED: 'ERRORED'
+});
+
+export type ServiceStateType = $Keys<typeof ServiceState>
+
+export type Service = {|
+  +id: string,
+  +name: string,
+  +status: {
+    state: ServiceStateType,
+    exception: string | null,
+    traceback: Array<string> | null
+  }
+|}
+
+export type ServiceDelta = {|
+  +original: Service,
+  +status: {
+    state: ServiceStateType
+  }
+|}

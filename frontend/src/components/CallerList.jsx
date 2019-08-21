@@ -10,6 +10,7 @@ import {isIOS, isSafari} from "react-device-detect";
 import type {AsyncList} from '../actions/api';
 import {EMPTY_ASYNC_LIST, renderAsyncList} from '../actions/api';
 import type {Call, Caller, CallerDelta} from '../types/domainTypes';
+import AsyncListView from './AsyncList';
 import EditableCaller from './EditableCaller';
 
 // This should probably go somewhere else.
@@ -42,34 +43,15 @@ type CallerListProps = {|
 |}
 
 export default function CallerList(props: CallerListProps) {
-  return renderAsyncList(
-    props.callers,
-    () => (
-      <div>
-        <CircularProgress/>
-      </div>
-    ),
-    (callers: Array<Caller>) => {
-      if (callers.length > 0) {
-        // $FlowIgnore
-        const wrapped = {callers: callers, ...props};
-        return <CallerListInner {...wrapped}/>
-      } else {
-        return (
-          <div style={{display: 'flex', alignContent: 'center'}}>
-            <ErrorOutline htmlColor='#6C6C6C' style={{marginLeft: 5, marginRight: 15}}/>
-            <Typography
-              variant='body1'
-              color='textSecondary'
 
-            >
-              There are no calls to display.
-            </Typography>
-          </div>
-        )
-      }
-    }
-  );
+  function renderCallerList(callers: Array<Caller>, props: CallerListProps) {
+    // $FlowIgnore
+    const wrapped = {callers: callers, ...props};
+    return <CallerListInner {...wrapped}/>
+  }
+
+  return <AsyncListView list={props.callers} listRender={renderCallerList} listRenderProps={props}
+                        emptyMessage='There are no callers to display.'/>
 }
 
 type CallerListInnerProps = {|

@@ -20,6 +20,5 @@ export default () => {
   // which serves the frontend, under a common web server.
   API_PARAMETERS.host = location.hostname;
   API_PARAMETERS.port = location.port;
-  console.log(API_PARAMETERS);
   return null;
 }

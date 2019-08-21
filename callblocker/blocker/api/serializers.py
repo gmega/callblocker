@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.fields import ListField
 from rest_framework.relations import HyperlinkedRelatedField
 from rest_framework.serializers import ModelSerializer, HyperlinkedModelSerializer
 from rest_framework.validators import UniqueValidator
@@ -108,7 +109,7 @@ class CallerPOSTSerializer(ModelSerializer):
 class ServiceStatusSerializer(ROSerializer):
     state = EnumField(ServiceState)
     exception = ExceptionField()
-    traceback = serializers.CharField()
+    traceback = ListField(child=serializers.CharField())
 
 
 class ServiceSerializer(ROSerializer):

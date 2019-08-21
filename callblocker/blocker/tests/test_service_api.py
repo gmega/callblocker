@@ -92,3 +92,20 @@ def test_starts_stops_service(api_client):
 
         assert result.status_code == status.HTTP_202_ACCEPTED
         assert services.services().fp1.status().state == ServiceState[target]
+
+
+def test_raises_400_on_malformed_request(api_client):
+    spec = ServiceGroupSpec(
+        fp1=lambda _: FlippinService('FlippingService 1')
+    )
+    setattr(services, 'custom', spec)
+    callblocker.blocker.bootstrap_mode(BootstrapMode.CUSTOM)
+    bootstrap('custom')
+
+    assert api_client.patch(
+        '/api/services/fp1/',
+        data=json.dumps({
+            'state': 'TERMINATED'
+        }),
+        content_type='application/json'
+    ).status_code == 400

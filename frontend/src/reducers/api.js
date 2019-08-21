@@ -2,19 +2,23 @@
 import {Map as IMap} from 'immutable';
 import type {ApiAction, ApiRequest, AsyncList} from '../actions/api';
 import {
-  updateAsyncList,
   CLEAR_CACHE,
+  CREATE_CALLER,
   EMPTY_ASYNC_LIST,
   FETCH_CALLERS,
   FETCH_CALLS,
-  CREATE_CALLER, PATCH_CALLERS
+  FETCH_SERVICES,
+  PATCH_CALLERS,
+  PATCH_SERVICE,
+  updateAsyncList
 } from '../actions/api';
-import type {Call, Caller} from '../types/domainTypes';
+import type {Call, Caller, Service} from '../types/domainTypes';
 
 
 export type ApiState = {
   callers: AsyncList<Caller>,
   calls: IMap<string, AsyncList<Call>>,
+  services: AsyncList<Service>,
   // This is the easiest way I could think of to get the global status
   // bar to pick up all of the incoming requests. This works as a kind
   // of pseudo messaging queue where we can only see the head.
@@ -27,6 +31,7 @@ export type ApiState = {
 const initialState = {
   callers: undefined,
   calls: IMap(),
+  services: undefined,
   lastRequest: {
     counter: 0
   }
@@ -50,8 +55,15 @@ export default (state: ApiState = initialState, action: ApiAction): ApiState => 
         ),
         lastRequest: updateLastRequest(state, action)
       };
+    case FETCH_SERVICES:
+      return {
+        ...state,
+        services: updateAsyncList<Service>(state.services, action),
+        lastRequest: updateLastRequest(state, action)
+      };
     case CREATE_CALLER:
     case PATCH_CALLERS:
+    case PATCH_SERVICE:
       return {
         ...state,
         lastRequest: updateLastRequest(state, action)

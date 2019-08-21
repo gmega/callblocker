@@ -190,6 +190,8 @@ class BaseService(Service):
         self._state = ServiceState.ERRORED if self._error else ServiceState.TERMINATED
         logger.info(f'{self.name} has terminated with state {self._state}')
         self.shutdown.set()
+        # Service may die during startup, so we have to set this too.
+        self.startup.set()
 
     def status(self) -> ServiceStatus:
         return ServiceStatus(self._state, **self._error)

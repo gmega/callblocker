@@ -1,3 +1,5 @@
+import sys
+
 from callblocker.core.modem import ModemType
 
 #: Definitions for Conexant CX930xx-based modems.
