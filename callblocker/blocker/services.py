@@ -30,7 +30,7 @@ server = ServiceGroupSpec(
     ),
     callmonitor=lambda services: (
         CallMonitor(
-            telcos.get_telco(settings.MODEM_TELCO_PROVIDER),
+            telcos.get_telco(settings.MODEM_TELCO_PROVIDER)(),
             services.modem,
             services.aio_loop
         )
@@ -52,7 +52,7 @@ fake_server = ServiceGroupSpec(
     ),
     callmonitor=lambda services: (
         CallMonitor(
-            telcos.get_telco(settings.MODEM_TELCO_PROVIDER),
+            telcos.get_telco(settings.MODEM_TELCO_PROVIDER)(),
             services.modem,
             services.aio_loop
         )
