@@ -86,7 +86,7 @@ Isso vai criar um novo diretório contendo o código do bloqueador. Você deve e
 e rodar o _build_ do Docker:
 
 ```sh
-> docker build -t callblocker:latest --build-arg BUILD_RPI=1 .
+> docker build -t callblocker:latest --build-arg RPI_BUILD=1 .
 ```
 
 se esse comando terminar sem erros, a sua instalação deu certo.
