@@ -23,9 +23,9 @@ class BaseModemConsole(Cmd, AsyncioService):
 
     name = 'modem console'
 
-    def __init__(self, stdout, modem: Modem, aio_loop: AbstractEventLoop):
+    def __init__(self, stdout, modem: Modem, aio_loop_service: AsyncioEventLoop):
         Cmd.__init__(self, stdout=stdout)
-        AsyncioService.__init__(self, aio_loop=aio_loop)
+        AsyncioService.__init__(self, aio_loop_service=aio_loop_service)
         self.stream = modem.event_stream()
 
     def do_exit(self, _):
@@ -57,8 +57,8 @@ class BaseModemConsole(Cmd, AsyncioService):
 
 class ModemConsole(BaseModemConsole):
 
-    def __init__(self, stdout, modem: Modem, aio_loop: AbstractEventLoop):
-        super().__init__(stdout=stdout, modem=modem, aio_loop=aio_loop)
+    def __init__(self, stdout, modem: Modem, aio_loop_service: AsyncioEventLoop):
+        super().__init__(stdout=stdout, modem=modem, aio_loop_service=aio_loop_service)
 
     def do_lscommand(self, _):
         print('Valid commands are: %s' % ', '.join(self.modem.modem_type.COMMANDS), file=self.stdout)
@@ -113,11 +113,11 @@ def main():
     modem = Modem(
         modems.get_modem(args.modem),
         PySerialDevice(args.device, args.baud),
-        aio_loop.aio_loop
+        aio_loop
     )
     modem.start()
 
-    console = ModemConsole(stdout=sys.stdout, modem=modem, aio_loop=aio_loop.aio_loop)
+    console = ModemConsole(stdout=sys.stdout, modem=modem, aio_loop_service=aio_loop)
     console.start()
 
     console.cmdloop('Type "help" for available commands.')

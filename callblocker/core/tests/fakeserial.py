@@ -4,7 +4,7 @@ from threading import Thread
 
 from callblocker.core.modem import ModemType, SerialDeviceFactory
 from callblocker.core.modems import CX930xx
-from callblocker.core.service import AsyncioService, ServiceState
+from callblocker.core.service import AsyncioService, ServiceState, AsyncioEventLoop
 
 CX930xx_fake = ModemType(
     # We are forced by https://bugs.python.org/issue17083 to create a different modem type that uses
@@ -17,11 +17,14 @@ CX930xx_fake = ModemType(
 
 
 class ReplyAction(object):
-    def __init__(self, aio_loop: AbstractEventLoop, input: str, timeout: int = 10):
+    def __init__(self, input: str, timeout: int = 10):
         self.output = None
         self.input = input
         self.timeout = timeout
         self.latency = 0
+        self.done = None
+
+    def set_loop(self, aio_loop: AbstractEventLoop):
         self.done = Event(loop=aio_loop)
 
     def reply(self, output: str) -> 'ReplyAction':
@@ -46,9 +49,12 @@ class ReplyAction(object):
 
 
 class TimedAction(object):
-    def __init__(self, aio_loop: AbstractEventLoop, timeout: int):
+    def __init__(self, timeout: int):
         self.timeout = timeout
         self.payload = None
+        self.done = None
+
+    def set_loop(self, aio_loop: AbstractEventLoop):
         self.done = Event(loop=aio_loop)
 
     def output(self, output: str):
@@ -73,14 +79,17 @@ class ScriptedModem(SerialDeviceFactory, Protocol, AsyncioService):
 
     name = 'fake modem'
 
-    def __init__(self, aio_loop: AbstractEventLoop, command_mode=False):
-        AsyncioService.__init__(self, aio_loop)
+    def __init__(self, aio_loop_service: AsyncioEventLoop, command_mode=False, defer_script=False):
+        AsyncioService.__init__(self, aio_loop_service)
         self.script = None
         self._deferred_actions = []
         self.out_buffer = None
         self.in_buffer = None
 
         self.command_mode = command_mode
+
+        self.defer_script = defer_script
+        self._defer_event = None
 
     # --------------------- Scripting methods ---------------------------------
 
@@ -93,13 +102,13 @@ class ScriptedModem(SerialDeviceFactory, Protocol, AsyncioService):
         :return:
         """
         self._allow_states(*ServiceState.halted_states())
-        reply = ReplyAction(self.aio_loop, input)
+        reply = ReplyAction(input)
         self._add_action(reply)
         return reply
 
     def after(self, seconds: int):
         self._allow_states(*ServiceState.halted_states())
-        timed = TimedAction(self.aio_loop, seconds)
+        timed = TimedAction(seconds)
         self._add_action(timed)
         return timed
 
@@ -111,11 +120,25 @@ class ScriptedModem(SerialDeviceFactory, Protocol, AsyncioService):
 
         return last
 
+    def run_scripted_actions(self):
+        """
+        Begins running the scripted actions (or enters command mode).
+        :return:
+        """
+        if self._defer_event:
+            self.aio_loop.call_soon_threadsafe(self._defer_event.set)
+
     def _add_action(self, action):
-        if self.script is not None:
-            self.script.put_nowait(action)
-        else:
+        if not self._add_action_now(action):
             self._deferred_actions.append(action)
+
+    def _add_action_now(self, action):
+        if self.script is not None:
+            action.set_loop(self.aio_loop)
+            self.script.put_nowait(action)
+            return True
+
+        return False
 
     # ------------------- SerialDeviceFactory --------------------------------
 
@@ -128,16 +151,21 @@ class ScriptedModem(SerialDeviceFactory, Protocol, AsyncioService):
 
         # Transfer deferred actions.
         for action in self._deferred_actions:
-            self.script.put_nowait(action)
+            self._add_action_now(action)
 
         self._deferred_actions = []
 
-        # We're inside of an asyncio task, but start is blocking. We hack up
-        # a nonblocking version of it.
-        started = Event(loop=self.aio_loop)
+        # If the client wishes to delay startup of the scripted actions (e.g. to register an EventStream first),
+        # we set this up here.
+        if self.defer_script:
+            self._defer_event = Event(loop=aio_loop)
+
+        # We're inside of an asyncio task, but need a synchronous start. Hack up
+        # an asyncio version of it.
+        started = Event(loop=aio_loop)
 
         def async_start():
-            self.start()
+            self.sync_start()
             self.aio_loop.call_soon_threadsafe(started.set)
 
         Thread(target=async_start).start()
@@ -186,6 +214,9 @@ class ScriptedModem(SerialDeviceFactory, Protocol, AsyncioService):
 
     async def _event_loop(self):
         self._signal_started()
+        # Defers running the script if so requested by the user.
+        if self._defer_event:
+            await self._defer_event.wait()
         # If the queue is empty and we're not in command mode,
         # we're done.
         while (not self.script.empty()) or self.command_mode:
@@ -199,8 +230,8 @@ class ScriptedModem(SerialDeviceFactory, Protocol, AsyncioService):
     # ------------------- Convenience methods ---------------------------------
 
     @staticmethod
-    def from_modem_type(modem_type: ModemType, aio_loop: AbstractEventLoop) -> 'ScriptedModem':
-        modem = ScriptedModem(aio_loop=aio_loop, command_mode=True)
+    def from_modem_type(modem_type: ModemType, aio_loop_service: AsyncioEventLoop) -> 'ScriptedModem':
+        modem = ScriptedModem(aio_loop_service=aio_loop_service, command_mode=True)
         for command in modem_type.commands[ModemType.INIT]:
             modem.on_input(command).reply('OK')
 

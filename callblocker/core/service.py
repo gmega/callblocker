@@ -137,6 +137,7 @@ class BaseService(Service):
             self._start_event_loop()
             return self
         except:
+            self._capture_error()
             self._signal_terminated()
             raise
 
@@ -176,6 +177,9 @@ class BaseService(Service):
 
             return self
         except:
+            # We actually cannot know the state of the service when an exception is thrown halfway through
+            # a shutdown. It may have stayed in an inconsistent state which cannot be recovered from.
+            self._capture_error()
             self._signal_terminated()
             raise
 
@@ -253,9 +257,9 @@ class AsyncioService(BaseService):
     set _startup_event as part of event loop initialization.
     """
 
-    def __init__(self, aio_loop: AbstractEventLoop):
+    def __init__(self, aio_loop_service: 'AsyncioEventLoop'):
         super().__init__()
-        self.aio_loop = aio_loop
+        self._aio_loop_service = aio_loop_service
         self.future = None
 
     def _start_event_loop(self):
@@ -272,6 +276,10 @@ class AsyncioService(BaseService):
             self._capture_error()
         finally:
             self._signal_terminated()
+
+    @property
+    def aio_loop(self):
+        return self._aio_loop_service.aio_loop
 
     def _halt_event_loop(self):
         self.future.cancel()

@@ -11,7 +11,7 @@ class BuggyAsyncService(AsyncioService):
 
     def __init__(self, aio_loop):
         super().__init__(aio_loop)
-        self.running = AIOEvent(loop=aio_loop)
+        self.running = AIOEvent(loop=self.aio_loop)
         self.should_error = True
 
     def die(self):
@@ -56,7 +56,7 @@ class BuggyThreadedService(ThreadedService):
 
 
 def test_async_service(aio_loop):
-    service_test(BuggyAsyncService(aio_loop.aio_loop))
+    service_test(BuggyAsyncService(aio_loop))
 
 
 def test_threaded_service():

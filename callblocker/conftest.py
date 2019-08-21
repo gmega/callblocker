@@ -8,7 +8,7 @@ from callblocker.core.tests.fakeserial import ScriptedModem
 
 @pytest.fixture
 def fake_serial(aio_loop):
-    serial = ScriptedModem(aio_loop=aio_loop.aio_loop)
+    serial = ScriptedModem(aio_loop_service=aio_loop, defer_script=True)
     yield serial
 
     if serial.status().state not in ServiceState.halted_states():

@@ -11,12 +11,13 @@ export default function ComponentRoute<P>(props: {
   C: ComponentType<P>,
   componentProps: P
 }) {
-  return <Route exact path={props.path} render={() => {
+  return <Route path={props.path} render={() => {
     props.onActivation(props.routeId);
     return <props.C {...props.componentProps}/>;
   }}/>
 }
 
 ComponentRoute.defaultProps = {
+  onActivation: () => undefined,
   componentProps: {}
 };

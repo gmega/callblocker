@@ -1,14 +1,13 @@
 import abc
 import logging
 from abc import abstractmethod
-from asyncio import AbstractEventLoop
 
 from django.db import transaction
 from django.utils import timezone
 
 from callblocker.blocker.models import Caller, Call
 from callblocker.core.modem import Modem, ModemType, ModemEvent
-from callblocker.core.service import AsyncioService
+from callblocker.core.service import AsyncioService, AsyncioEventLoop
 
 logger = logging.getLogger(__name__)
 
@@ -34,15 +33,14 @@ class TelcoProvider(abc.ABC):
 class CallMonitor(AsyncioService):
     name = 'call monitor'
 
-    def __init__(self, provider: TelcoProvider, modem: Modem, aio_loop: AbstractEventLoop):
-        super().__init__(aio_loop=aio_loop)
+    def __init__(self, provider: TelcoProvider, modem: Modem, aio_loop_service: AsyncioEventLoop):
+        super().__init__(aio_loop_service=aio_loop_service)
         self.provider = provider
         self.modem = modem
-        self.stream = modem.event_stream()
 
     async def _event_loop(self):
         self._signal_started()
-        with self.stream as stream:
+        with self.modem.event_stream() as stream:
             async for event in stream:
                 await self._process_event(event)
 

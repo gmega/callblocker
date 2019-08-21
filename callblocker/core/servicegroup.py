@@ -23,9 +23,15 @@ class ServiceGroup(object):
         setattr(self, service.id, service)
         return service
 
+    def start(self):
+        # Will improve once we have dep tracking and chained
+        # async startup/shutdown.
+        for service in self.services:
+            service.sync_start()
+
     def shutdown(self):
         for service in self.services:
-            service.stop()
+            service.sync_stop()
 
 
 class ServiceGroupSpec(object):
@@ -39,6 +45,6 @@ class ServiceGroupSpec(object):
             # I could complicate this by patching in a mixin with a readonly property
             # or using descriptors, but this is simply easier.
             instance.id = key
-            group.register_service(instance).sync_start()
+            group.register_service(instance)
 
         return group

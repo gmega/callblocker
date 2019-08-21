@@ -8,7 +8,7 @@ from typing import Union, List, Dict, Tuple, Optional
 
 import serial_asyncio
 
-from callblocker.core.service import AsyncioService, ServiceState
+from callblocker.core.service import AsyncioService, ServiceState, AsyncioEventLoop
 
 logger = logging.getLogger(__name__)
 
@@ -83,14 +83,16 @@ class Modem(AsyncioService):
     def __init__(self,
                  modem_type: ModemType,
                  device_factory: SerialDeviceFactory,
-                 aio_loop: Optional[asyncio.AbstractEventLoop] = None):
-        super().__init__(aio_loop=asyncio.get_event_loop() if aio_loop is None else aio_loop)
+                 aio_loop_service: AsyncioEventLoop,
+                 auto_init=False):
+        super().__init__(aio_loop_service=aio_loop_service)
         self.device_factory = device_factory
         self.modem_type = modem_type
 
         self._reader: Optional[StreamReader] = None
         self._writer: Optional[StreamWriter] = None
         self.streams = []
+        self.auto_init = auto_init
 
     async def run_command_set(self, command_set: str):
         self._allow_states(ServiceState.READY)
@@ -151,7 +153,13 @@ class Modem(AsyncioService):
 
     async def _event_loop(self):
         # Connects to the modem.
-        await self._connect()
+        self._reader, self._writer = await self.device_factory.connect(aio_loop=self.aio_loop)
+
+        # Initializes the modem. This does not belong here, but for now will stay here. You can always
+        # disable it by setting auto_init to false.
+        if self.auto_init:
+            self.aio_loop.create_task(self._init_modem())
+
         # Service is ready.
         self._signal_started()
         try:
@@ -167,18 +175,21 @@ class Modem(AsyncioService):
                 stream.exception(ex)
             raise
 
+    async def _init_modem(self):
+        try:
+            await self.run_command_set(ModemType.INIT)
+        except:
+            # This is not good. We have no way of transitioning the service into an error state
+            # if the error is not in the event loop. This is a hack.
+            self._capture_error()
+            self.stop()
+
     def _graceful_cleanup(self):
         try:
-            self._writer.transport.close()
+            if self._writer is not None:
+                self._writer.transport.close()
         except:
             self._reader = self._writer = None
-
-    async def _connect(self) -> None:
-        try:
-            self._reader, self._writer = await self.device_factory.connect(aio_loop=self.aio_loop)
-        except Exception as ex:
-            self.close()
-            raise ex
 
     async def _read_event(self, discard=None) -> Union[ModemEvent, None]:
         """

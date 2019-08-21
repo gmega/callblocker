@@ -1,3 +1,5 @@
+import asyncio
+
 from callblocker.blocker import BOOTSTRAP_MODE, services
 
 
@@ -12,6 +14,8 @@ from callblocker.blocker import BOOTSTRAP_MODE, services
 # putting the code there results in an exception.
 # The simplest solution is therefore to put a a "boot mode" here which is set early in the initialization process,
 # but will materialize into actual services only here, when called by urls.py. Ugh.
+from callblocker.core.modem import ModemType
+
 
 def bootstrap():
-    services.bootstrap(BOOTSTRAP_MODE.value)
+    services.bootstrap(BOOTSTRAP_MODE.value).start()

@@ -32,6 +32,5 @@ export default (props: {
         onActivation={props.onRouteActivation}
         C={Settings}
       />
-
     </Switch>)
 }

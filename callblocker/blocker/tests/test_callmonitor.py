@@ -37,20 +37,20 @@ def test_register_calls(fake_serial, aio_loop):
         """
     ), step=0)
 
-    loop = aio_loop.aio_loop
+    modem = Modem(CX930xx_fake, fake_serial, aio_loop)
+    monitor = CallMonitor(Vivo(), modem, aio_loop)
 
-    modem = Modem(CX930xx_fake, fake_serial, loop)
-    monitor = CallMonitor(Vivo(), modem, loop)
+    modem.sync_start()
+    monitor.sync_start()
 
-    modem.start()
-    monitor.start()
+    fake_serial.run_scripted_actions()
 
     # Both modem and monitor should have died with the same exception as per the EventStream contract.
     await_predicate(lambda: monitor.status().state == ServiceState.ERRORED, 5)
     assert isinstance(modem.status().exception, EOFError)
     assert isinstance(monitor.status().exception, EOFError)
 
-    asyncio.run_coroutine_threadsafe(event.wait(), loop=loop).result(5)
+    asyncio.run_coroutine_threadsafe(event.wait(), loop=aio_loop.aio_loop).result(5)
 
     # We need this filter because the sample data loaded by the fixture contains a lot of stuff already.
     reference = {'992223451', '992223452'}
@@ -93,15 +93,15 @@ def test_blocks_calls(fake_serial, aio_loop):
     fake_serial.on_input(input='ATH1').reply('OK')
     last = fake_serial.on_input(input='ATH0').reply('OK')
 
-    loop = aio_loop.aio_loop
+    modem = Modem(CX930xx_fake, fake_serial, aio_loop)
+    monitor = CallMonitor(Vivo(), modem, aio_loop)
 
-    modem = Modem(CX930xx_fake, fake_serial, loop)
-    monitor = CallMonitor(Vivo(), modem, loop)
+    modem.sync_start()
+    monitor.sync_start()
 
-    modem.start()
-    monitor.start()
+    fake_serial.run_scripted_actions()
 
-    asyncio.run_coroutine_threadsafe(last.wait(), loop=loop).result(10)
+    asyncio.run_coroutine_threadsafe(last.wait(), loop=aio_loop.aio_loop).result(10)
 
     await_predicate(lambda: monitor.status().state == ServiceState.ERRORED, 5)
 

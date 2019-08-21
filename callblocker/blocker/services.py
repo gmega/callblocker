@@ -24,14 +24,15 @@ server = ServiceGroupSpec(
         Modem(
             modems.get_modem(settings.MODEM_TYPE),
             PySerialDevice(settings.MODEM_DEVICE, settings.MODEM_BAUD),
-            services.aio_loop.aio_loop
+            services.aio_loop,
+            auto_init=True
         )
     ),
     callmonitor=lambda services: (
         CallMonitor(
             telcos.get_telco(settings.MODEM_TELCO_PROVIDER),
             services.modem,
-            services.aio_loop.aio_loop
+            services.aio_loop
         )
     )
 )
@@ -44,15 +45,16 @@ fake_server = ServiceGroupSpec(
     modem=lambda services: (
         Modem(
             CX930xx_fake,
-            ScriptedModem.from_modem_type(CX930xx_fake, services.aio_loop.aio_loop),
-            services.aio_loop.aio_loop
+            ScriptedModem.from_modem_type(CX930xx_fake, services.aio_loop),
+            services.aio_loop,
+            auto_init=True
         )
     ),
     callmonitor=lambda services: (
         CallMonitor(
             telcos.get_telco(settings.MODEM_TELCO_PROVIDER),
             services.modem,
-            services.aio_loop.aio_loop
+            services.aio_loop
         )
     )
 )
@@ -67,6 +69,7 @@ _services: Optional[ServiceGroup] = None
 def bootstrap(mode: str):
     global _services
     _services = getattr(sys.modules[__name__], mode).bootstrap()
+    return _services
 
 
 def services() -> ServiceGroup:

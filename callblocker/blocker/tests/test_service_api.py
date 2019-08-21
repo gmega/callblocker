@@ -2,8 +2,7 @@ import json
 
 from rest_framework import status
 
-import callblocker
-from callblocker.blocker import services, BootstrapMode
+from callblocker.blocker import services
 from callblocker.blocker.services import bootstrap
 from callblocker.core.service import Service, ServiceStatus, ServiceState
 from callblocker.core.servicegroup import ServiceGroupSpec
@@ -43,14 +42,13 @@ class FlippinService(Service):
 
 
 def test_provides_correct_service_status(api_client):
-    spec = ServiceGroupSpec(
-        fp1=lambda _: FlippinService('FlippingService 1'),
-        fp2=lambda _: FlippinService('FlippingService 2'),
-        fp3=lambda _: FlippinService('FlippingService 3')
+    bootstrap_spec(
+        spec=ServiceGroupSpec(
+            fp1=lambda _: FlippinService('FlippingService 1'),
+            fp2=lambda _: FlippinService('FlippingService 2'),
+            fp3=lambda _: FlippinService('FlippingService 3')
+        )
     )
-    setattr(services, 'custom', spec)
-    callblocker.blocker.bootstrap_mode(BootstrapMode.CUSTOM)
-    bootstrap('custom')
 
     summary = api_client.get('/api/services/').json()
 
@@ -72,12 +70,11 @@ def test_provides_correct_service_status(api_client):
 
 
 def test_starts_stops_service(api_client):
-    spec = ServiceGroupSpec(
-        fp1=lambda _: FlippinService('FlippingService 1')
+    bootstrap_spec(
+        ServiceGroupSpec(
+            fp1=lambda _: FlippinService('FlippingService 1')
+        )
     )
-    setattr(services, 'custom', spec)
-    callblocker.blocker.bootstrap_mode(BootstrapMode.CUSTOM)
-    bootstrap('custom')
 
     assert api_client.get('/api/services/fp1/').json()['status']['state'] == 'READY'
 
@@ -95,12 +92,11 @@ def test_starts_stops_service(api_client):
 
 
 def test_raises_400_on_malformed_request(api_client):
-    spec = ServiceGroupSpec(
-        fp1=lambda _: FlippinService('FlippingService 1')
+    bootstrap_spec(
+        ServiceGroupSpec(
+            fp1=lambda _: FlippinService('FlippingService 1')
+        )
     )
-    setattr(services, 'custom', spec)
-    callblocker.blocker.bootstrap_mode(BootstrapMode.CUSTOM)
-    bootstrap('custom')
 
     assert api_client.patch(
         '/api/services/fp1/',
@@ -109,3 +105,15 @@ def test_raises_400_on_malformed_request(api_client):
         }),
         content_type='application/json'
     ).status_code == 400
+
+
+def bootstrap_spec(spec):
+    # This is hacky, and will improve as I figure out an
+    # API for it.
+
+    # Triggers the bootstrap call in urls.py
+    from callblocker import urls
+
+    # Overrides it with our stuff.
+    setattr(services, 'custom', spec)
+    bootstrap('custom').start()
