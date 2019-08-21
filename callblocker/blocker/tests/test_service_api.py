@@ -62,13 +62,13 @@ def test_provides_correct_service_status(api_client):
     fp1 = services.services().fp1
     fp1.state = ServiceState.ERRORED
     fp1.exception = EOFError('Ooops!')
-    fp1.traceback = 'Ooops'
+    fp1.traceback = ['Ooops']
 
     fp1_summary = api_client.get('/api/services/fp1/').json()
     assert fp1_summary['id'] == 'fp1'
     assert fp1_summary['status']['state'] == 'ERRORED'
     assert fp1_summary['status']['exception'] == 'EOFError: Ooops!'
-    assert fp1_summary['status']['traceback'] == 'Ooops'
+    assert fp1_summary['status']['traceback'] == ['Ooops']
 
 
 def test_starts_stops_service(api_client):
