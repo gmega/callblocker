@@ -9,8 +9,7 @@ LOGGING = {
         },
         'api': {
             'class': 'callblocker.core.logging.TailHandler',
-            'tail_size': 100,
-            'formatter': 'verbose'
+            'tail_size': 100
         }
     },
     'root': {
