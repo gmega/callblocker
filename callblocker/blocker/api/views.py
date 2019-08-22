@@ -14,7 +14,7 @@ from rest_framework.mixins import RetrieveModelMixin, ListModelMixin
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_202_ACCEPTED
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_202_ACCEPTED, HTTP_200_OK
 from rest_framework.viewsets import ModelViewSet, GenericViewSet, ViewSet
 from rest_framework_bulk import BulkUpdateModelMixin, BulkDestroyModelMixin
 
@@ -23,6 +23,7 @@ from callblocker.blocker.api.serializers import CallerSerializer, CallSerializer
     SourceSerializer, ServiceSerializer
 from callblocker.blocker.models import Caller, Call, Source
 from callblocker.blocker.services import services
+from callblocker.core.logging import tail
 from callblocker.core.service import ServiceState
 
 
@@ -198,6 +199,11 @@ class ServicesViewset(ViewSet):
         if service is None:
             raise Http404(f'No services match {pk}.')
         return service
+
+
+@api_view(['GET'])
+def log(request):
+    return Response(data=tail(), status=HTTP_200_OK)
 
 
 @api_view(['POST'])

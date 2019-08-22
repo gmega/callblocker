@@ -73,3 +73,5 @@ export type ServiceDelta = {|
     state: ServiceStateType
   }
 |}
+
+export type LogEntry = string;

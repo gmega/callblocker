@@ -2,10 +2,11 @@
 
 import React from 'react';
 import {Redirect, Route, Switch} from 'react-router-dom';
-import CallerPanel from './components/CallerPanel';
 import ComponentRoute from './components/ComponentRoute';
-import Phonebook from './components/Phonebook';
-import Settings from './components/Settings';
+
+const Settings = React.lazy(() => import('./components/Settings'));
+const Phonebook = React.lazy(() => import('./components/Phonebook'));
+const CallerPanel = React.lazy(() => import('./components/CallerPanel'));
 
 
 export default (props: {

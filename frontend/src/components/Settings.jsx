@@ -1,5 +1,8 @@
-import {Box, Divider, makeStyles, Tab, Tabs, Typography} from '@material-ui/core';
+// @flow
+
+import {Box, makeStyles, Tab, Tabs, Typography} from '@material-ui/core';
 import React from 'react';
+import LogEntryList from './LogEntryList';
 import Nop from './Nop';
 import ServiceList from './ServiceList';
 
@@ -35,6 +38,27 @@ export default () => {
     setActive(activeTab);
   }
 
+  function systemTab() {
+    return (
+      <div>
+        <Typography
+          variant='h6'
+          color='textSecondary'
+          className={classes.settingsTitle}
+        >Services</Typography>
+        <ServiceList/>
+        <Typography
+          variant='h6'
+          color='textSecondary'
+          className={classes.settingsTitle}
+        >Server log</Typography>
+        <div>
+          <LogEntryList/>
+        </div>
+      </div>
+    )
+  }
+
   // Stub, just returns service list for now.
   return (
     <Nop>
@@ -43,14 +67,7 @@ export default () => {
         <Tab label="Modem"/>
       </Tabs>
       <TabPanel value={active} index={0}>
-        <div>
-          <Typography
-            variant='h6'
-            color='textSecondary'
-            className={classes.settingsTitle}
-          >Services</Typography>
-          <ServiceList/>
-        </div>
+        {systemTab()}
       </TabPanel>
     </Nop>
   )

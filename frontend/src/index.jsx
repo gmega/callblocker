@@ -5,9 +5,10 @@ import {Provider} from 'react-redux';
 import {BrowserRouter} from 'react-router-dom';
 import {applyMiddleware, createStore} from 'redux';
 import thunk from 'redux-thunk';
+import APIConfig from './components/APIConfig';
+import Loader from './components/Loader';
 import NavDrawer from './components/NavDrawer';
 import {rootReducer} from './reducers/index.js';
-import APIConfig from './components/APIConfig';
 
 const store = createStore(
   rootReducer,
@@ -16,12 +17,14 @@ const store = createStore(
 
 ReactDOM.render(
   <BrowserRouter>
-    <APIConfig/>
-    <SnackbarProvider maxSnack={3}>
-      <Provider store={store}>
-        <NavDrawer/>
-      </Provider>
-    </SnackbarProvider>
+    <React.Suspense fallback={<Loader variant='solo'/>}>
+      <APIConfig/>
+      <SnackbarProvider maxSnack={3}>
+        <Provider store={store}>
+          <NavDrawer/>
+        </Provider>
+      </SnackbarProvider>
+    </React.Suspense>
   </BrowserRouter>,
   document.getElementById('root')
 );

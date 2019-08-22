@@ -7,18 +7,20 @@ import {
   EMPTY_ASYNC_LIST,
   FETCH_CALLERS,
   FETCH_CALLS,
+  FETCH_LOG,
   FETCH_SERVICES,
   PATCH_CALLERS,
   PATCH_SERVICE,
   updateAsyncList
 } from '../actions/api';
-import type {Call, Caller, Service} from '../types/domainTypes';
+import type {Call, Caller, LogEntry, Service} from '../types/domainTypes';
 
 
 export type ApiState = {
   callers: AsyncList<Caller>,
   calls: IMap<string, AsyncList<Call>>,
   services: AsyncList<Service>,
+  log: AsyncList<LogEntry>,
   // This is the easiest way I could think of to get the global status
   // bar to pick up all of the incoming requests. This works as a kind
   // of pseudo messaging queue where we can only see the head.
@@ -32,6 +34,7 @@ const initialState = {
   callers: undefined,
   calls: IMap(),
   services: undefined,
+  log: undefined,
   lastRequest: {
     counter: 0
   }
@@ -59,6 +62,12 @@ export default (state: ApiState = initialState, action: ApiAction): ApiState => 
       return {
         ...state,
         services: updateAsyncList<Service>(state.services, action),
+        lastRequest: updateLastRequest(state, action)
+      };
+    case FETCH_LOG:
+      return {
+        ...state,
+        log: updateAsyncList<string>(state.log, action),
         lastRequest: updateLastRequest(state, action)
       };
     case CREATE_CALLER:

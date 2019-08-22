@@ -53,6 +53,7 @@ urlpatterns = [
     url(r'^api/', include(bulk_router.urls)),
     url(r'^api/', include(nested_router.urls)),
     path('api/modem/', api_views.modem),
+    path('api/log/', api_views.log),
     path('admin/', admin.site.urls)
 ]
 

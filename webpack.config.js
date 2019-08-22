@@ -1,18 +1,15 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FlowWebpackPlugin = require('flow-webpack-plugin');
-
-const OPTIONS = {
-  prod: ['PRODUCTION', 'DEVELOPMENT'],
-  rpi: ['Raspberry Pi', 'Web']
-};
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const webpack = require('webpack');
 
 const baseConfig = (env) => ({
   context: __dirname,
 
   entry: './frontend/src/index.jsx',
-  mode: env.prod ? 'production' : 'development',
-  devtool: env.prod ? 'source-maps' : '#eval-source-map',
+  mode: 'development',
+  devtool: 'eval-source-map',
   output: {
     path: path.resolve('./frontend/dist'),
     filename: 'index_bundle.js'
@@ -21,7 +18,9 @@ const baseConfig = (env) => ({
     new HtmlWebpackPlugin({
       title: 'Callblocker',
       template: './frontend/public/index.html'
-    })
+    }),
+    // Ugh, moment.js locales are enormous!
+    new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/)
   ],
   devServer: {
     contentBase: './frontend/dist',
@@ -55,26 +54,59 @@ const baseConfig = (env) => ({
   }
 });
 
-const webConfig = (env) => ({
-  ...baseConfig(env),
-  plugins: baseConfig(env).plugins.concat(new FlowWebpackPlugin())
-});
+const IDENTITY = (base) => base
 
-// Flow does not work on the Raspberry Pi, so we disable it. It's not necessary anyways as
-// the CI server will be the one handling flow checks and tests.
-const rpi4Config = (env) => ({
-  ...baseConfig(env)
-});
+const OPTIONS = {
+  // Uses different source maps in production.
+  prod: {
+    set: 'PRODUCTION',
+    unset: 'DEVELOPMENT',
+    apply_set: (base) => ({
+      ...base,
+      mode: 'production',
+      devtool: 'source-map'
+    }),
+    apply_unset: IDENTITY
+  },
+  // Disables flow when building in the Raspberry Pi.
+  rpi: {
+    set: 'Raspberry Pi',
+    unset: 'Web',
+    apply_set: IDENTITY,
+    apply_unset: (base) => ({
+      ...base,
+      plugins: base.plugins.concat(new FlowWebpackPlugin())
+    })
+  },
+  // Disables bundle size analysis unless requested.
+  sizes: {
+    set: 'with Bundle Size Analysis',
+    unset: 'without Bundle Size Analysis',
+    apply_set: (base) => ({
+      ...base,
+      plugins: base.plugins.concat(new BundleAnalyzerPlugin())
+    }),
+    apply_unset: IDENTITY
+  }
+};
 
-function formatOpts(config) {
+function formatOpts(env) {
   return (
     Object.entries(OPTIONS)
-      .map(([option, settings]) => config[option] ? settings[0] : settings[1])
+      .map(([option, settings]) => env[option] ? settings.set : settings.unset)
       .join(', ')
   )
 }
 
-module.exports = function(env={}, argv) {
+const applyConfig = (env) => Object
+  .entries(OPTIONS)
+  .reduce((config, [option, setting]) => {
+      return env[option] ? setting.apply_set(config) : setting.apply_unset(config)
+    },
+    baseConfig(env)
+  );
+
+module.exports = function (env = {}, argv) {
   console.log(`Running a <<${formatOpts(env)}>> build.`);
-  return (env.rpi ? rpi4Config : webConfig)(env);
+  return applyConfig(env);;
 };

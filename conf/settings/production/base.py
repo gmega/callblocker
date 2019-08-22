@@ -8,8 +8,13 @@ LOGGING = {
             'class': 'logging.StreamHandler',
         },
     },
+    'api': {
+        'class': 'callblocker.core.logging.TailHandler',
+        'tail_size': 100,
+        'formatter': 'verbose'
+    },
     'root': {
-        'handlers': ['console'],
+        'handlers': ['console', 'api'],
         'level': 'INFO'
     }
 }

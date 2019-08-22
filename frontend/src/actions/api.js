@@ -6,7 +6,7 @@ import {Dispatch} from 'react-redux';
 import {API_PARAMETERS} from '../components/APIConfig';
 
 import {camelize, snakeize} from '../helpers';
-import type {Call, Caller, CallerDelta, NewCaller, Service, ServiceDelta, ServiceStateType} from '../types/domainTypes';
+import type {Call, Caller, CallerDelta, LogEntry, NewCaller, Service, ServiceDelta} from '../types/domainTypes';
 
 // --------------------- Async Requests ---------------------------------------
 
@@ -90,10 +90,21 @@ FORMATTERS[FETCH_SERVICES] = ({
 });
 export type FetchServicesRequest = GenericApiRequest<'FETCH_SERVICES', void, Array<Service>>;
 
+export const FETCH_LOG = 'FETCH_LOG';
+FORMATTERS[FETCH_LOG] = ({
+  success: undefined,
+  failure: {
+    message: (input: void, reason: string) => `Error fetching server logs from backend server (${reason})`
+  }
+});
+export type FetchLogRequest = GenericApiRequest<'FETCH_LOG', void, Array<LogEntry>>;
+
+
 export type FetchRequest =
   FetchCallersRequest |
   FetchCallsRequest |
-  FetchServicesRequest
+  FetchServicesRequest |
+  FetchLogRequest
 
 // ------------------------------------------- Async Lists --------------------
 /* An "async list" is a list which can be fetched and refreshed
@@ -399,6 +410,26 @@ export function modifyService(
         source: delta
       }: PatchServiceRequest),
       dispatch
+    );
+}
+
+// ---------------------- Actions on Logs -------------------------------------
+
+export function fetchLog(
+  retry: boolean = false
+): Promise<Response> {
+  return (dispatch: Dispatch) =>
+    apiRequest(
+      `${API_PARAMETERS.endpoint()}api/log/`,
+      {},
+      ({
+        type: FETCH_LOG,
+        status: PENDING,
+        source: undefined
+      }: FetchLogRequest),
+      dispatch,
+      undefined,
+      retry ? RETRY_UNTIL_SUCCESS : NO_RETRY
     );
 }
 

@@ -10,7 +10,7 @@ import {isIOS, isSafari} from "react-device-detect";
 import type {AsyncList} from '../actions/api';
 import {EMPTY_ASYNC_LIST, renderAsyncList} from '../actions/api';
 import type {Call, Caller, CallerDelta} from '../types/domainTypes';
-import AsyncListView from './AsyncList';
+import AsyncListView from './AsyncListView';
 import EditableCaller from './EditableCaller';
 
 // This should probably go somewhere else.

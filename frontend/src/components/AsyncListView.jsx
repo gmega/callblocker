@@ -1,6 +1,6 @@
 // @flow
 
-import {CircularProgress} from '@material-ui/core';
+import Loader from './Loader';
 import Typography from '@material-ui/core/Typography';
 import {ErrorOutline} from '@material-ui/icons';
 import React from "react";
@@ -18,9 +18,7 @@ export default function AsyncListView<ElementType, ComponentProps>(props: AsyncL
   return renderAsyncList(
     props.list,
     () => (
-      <div>
-        <CircularProgress/>
-      </div>
+      <Loader variant='bare'/>
     ),
     (list: Array<ElementType>) => {
       if (list.length > 0) {
@@ -32,7 +30,6 @@ export default function AsyncListView<ElementType, ComponentProps>(props: AsyncL
             <Typography
               variant='body1'
               color='textSecondary'
-
             >
               {props.emptyMessage}
             </Typography>
@@ -42,3 +39,8 @@ export default function AsyncListView<ElementType, ComponentProps>(props: AsyncL
     }
   );
 }
+
+AsyncListView.defaultProps = {
+  listRenderProps: {},
+  emptyMessage: 'Nothing to display.'
+};

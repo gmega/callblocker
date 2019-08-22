@@ -7,7 +7,7 @@ import {fetchServices, modifyService} from '../actions/api';
 import {ServiceState} from '../types/domainTypes';
 import type {Service, ServiceStateType} from '../types/domainTypes';
 import {API_PARAMETERS} from './APIConfig';
-import AsyncListView from './AsyncList';
+import AsyncListView from './AsyncListView';
 import ServiceListItem from './ServiceListItem';
 
 type ServiceListProps = {
