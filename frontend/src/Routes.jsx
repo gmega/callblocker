@@ -6,7 +6,7 @@ import ComponentRoute from './components/ComponentRoute';
 
 const Settings = React.lazy(() => import('./components/Settings'));
 const Phonebook = React.lazy(() => import('./components/Phonebook'));
-const CallerPanel = React.lazy(() => import('./components/CallerPanel'));
+const CallerPanel = React.lazy(() => import('./components/RecentCallers'));
 
 
 export default (props: {

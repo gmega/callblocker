@@ -6,8 +6,8 @@ import React, {useEffect} from 'react';
 import {connect} from 'react-redux';
 import {Dispatch} from 'redux';
 import type {AsyncList} from '../actions/api';
-import {clearCache, createCaller, fetchCallers, fetchCalls} from '../actions/api';
-import type {Call, Caller, NewCaller} from '../types/domainTypes';
+import {clearCache, createCaller, deleteCaller, fetchCallers, fetchCalls, patchCallers} from '../actions/api';
+import type {Call, Caller, CallerDelta, NewCaller} from '../types/domainTypes';
 import CallerList from './CallerList';
 import CallerNewForm from './CallerNewForm';
 
@@ -70,17 +70,23 @@ function Phonebook(props: {
     // Bombing the whole tree of cached objects is not the most efficient approach,
     // but it is the simplest.
     dispatch(clearCache());
-    dispatch(fetchCallers('description', '',true));
+    dispatch(fetchCallers('description', '', true));
   }, []);
 
   function handleSearchUpdate(content: string) {
-    console.log(content);
-    console.log(content ? 'text' : 'description')
     dispatch(
       content ?
         fetchCallers('text_score', content, true) :
         fetchCallers('description', '')
     );
+  }
+
+  function handleCallerEdit(delta: Array<CallerDelta>) {
+    dispatch(patchCallers(delta));
+  }
+
+  function handleCallerDelete(caller: Caller) {
+    dispatch(deleteCaller(caller));
   }
 
   function handleCallDisplay(caller: Caller) {
@@ -96,7 +102,13 @@ function Phonebook(props: {
   return (
     <div>
       <SearchInput onChange={handleSearchUpdate}/>
-      <CallerList callers={callers} calls={calls} onCallDisplay={handleCallDisplay}/>
+      <CallerList
+        callers={callers}
+        calls={calls}
+        onCallDisplay={handleCallDisplay}
+        onCallerDelete={handleCallerDelete}
+        onCallerEdit={handleCallerEdit}
+      />
       <CallerNewForm open={addCallerOpen}
                      onCancel={() => setAddCallerOpen(false)}
                      onSubmit={handleNewCaller}/>

@@ -223,7 +223,7 @@ export type PatchCallerRequest = {|
 export const CREATE_CALLER = 'CREATE_CALLER';
 FORMATTERS[CREATE_CALLER] = ({
   success: {
-    message: (input: NewCaller) => `Caller (${input.areaCode})${input.number} has been added.`
+    message: (input: NewCaller) => `Caller ${callerDescription(input)} has been added.`
   },
   failure: {
     message: (input: NewCaller, reason: string) => `Failed to add new caller (${reason}).`
@@ -232,6 +232,20 @@ FORMATTERS[CREATE_CALLER] = ({
 export type CreateCallerRequest = {|
   type: 'CREATE_CALLER',
   ...AsyncRequest<NewCaller, void>
+|};
+
+export const DELETE_CALLER = 'DELETE_CALLER';
+FORMATTERS[DELETE_CALLER] = ({
+  success: {
+    message: (input: Caller) => `Caller ${callerDescription(input)} has been deleted.`
+  },
+  failure: {
+    message: (input: Caller, reason: string) => `Failed to delete caller (${reason}).`
+  }
+}: StatusMessageFormatter<Caller, void>);
+export type DeleteCallerRequest = {|
+  type: 'DELETE_CALLER',
+  ...AsyncRequest<Caller, void>
 |};
 
 export const PATCH_SERVICE = 'PATCH_SERVICE';
@@ -246,11 +260,15 @@ export type PatchServiceRequest = {|
   ...AsyncRequest<ServiceDelta, void>
 |}
 
+function callerDescription(caller: Caller | NewCaller) {
+  return caller.description ? caller.description : `(${caller.areaCode})${caller.number}`
+}
 
 export type WriteRequest =
   PatchCallerRequest |
   CreateCallerRequest |
-  PatchServiceRequest;
+  PatchServiceRequest |
+  DeleteCallerRequest;
 
 // --------------------------- Other Actions ----------------------------------
 
@@ -293,7 +311,9 @@ export function fetchCallers(
   return (dispatch: Dispatch) => {
     apiRequest(
       `${API_PARAMETERS.endpoint()}api/callers/?ordering=${ordering}${text ? `&text=${text}` : ''}`,
-      {},
+      {
+        method: 'GET'
+      },
       (
         {
           type: FETCH_CALLERS,
@@ -350,6 +370,24 @@ export function createCaller(caller: NewCaller) {
     )
 }
 
+export function deleteCaller(caller: Caller) {
+  return (dispatch: Dispatch) =>
+    apiRequest(
+      `${API_PARAMETERS.endpoint()}api/callers/${caller.areaCode}-${caller.number}/`,
+      {
+        method: 'DELETE'
+      },
+      (
+        {
+          type: DELETE_CALLER,
+          status: PENDING,
+          source: caller
+        }: DeleteCallerRequest
+      ),
+      dispatch
+    )
+}
+
 // ---------------------- Actions on Calls ------------------------------------
 
 export function fetchCalls(
@@ -359,7 +397,9 @@ export function fetchCalls(
   return (dispatch: Dispatch) =>
     apiRequest(
       `${API_PARAMETERS.endpoint()}api/callers/${caller.areaCode}-${caller.number}/calls/`,
-      {},
+      {
+        method: 'GET'
+      },
       (
         {
           type: FETCH_CALLS,
@@ -381,7 +421,9 @@ export function fetchServices(
   return (dispatch: Dispatch) =>
     apiRequest(
       `${API_PARAMETERS.endpoint()}api/services/`,
-      {},
+      {
+        method: 'GET'
+      },
       ({
         type: FETCH_SERVICES,
         status: PENDING,
@@ -421,7 +463,9 @@ export function fetchLog(
   return (dispatch: Dispatch) =>
     apiRequest(
       `${API_PARAMETERS.endpoint()}api/log/`,
-      {},
+      {
+        method: 'GET'
+      },
       ({
         type: FETCH_LOG,
         status: PENDING,
@@ -443,9 +487,15 @@ export function clearCache(): ClearCache {
 
 // -------------- Generic helpers for fetching and writing objects ------------
 
+type RequestParameters = {|
+  headers?: Object,
+  method: 'PATCH' | 'DELETE' | 'POST' | 'GET',
+  body?: string
+|}
+
 function apiRequest<Output>(
   input: string,
-  init: Object,
+  pars: RequestParameters,
   request: ApiRequest,
   dispatch: Dispatch,
   mapResponse?: (jsonResponse: Object) => Output,
@@ -457,10 +507,11 @@ function apiRequest<Output>(
   dispatch(request);
   // Runs it.
   return (
-    fetch(input, init)
+    fetch(input, (pars: Object))
       .then(response => {
         if (response.ok) {
-          return response.json();
+          // We only expect data on GET.
+          return pars.method === 'GET' ? response.json() : null;
         }
         // Failure, bad response.
         else {
@@ -477,18 +528,16 @@ function apiRequest<Output>(
           })
         }
       }).then(data => {
-      if (data) {
-        // Success.
-        dispatch(({
-          type: request.type,
-          status: COMPLETE,
-          source: request.source,
-          outcome: {
-            type: SUCCESS,
-            payload: mapResponse ? data.map(mapResponse) : data
-          }
-        }));
-      }
+      // Success.
+      dispatch(({
+        type: request.type,
+        status: COMPLETE,
+        source: request.source,
+        outcome: {
+          type: SUCCESS,
+          payload: mapResponse && data ? data.map(mapResponse) : data
+        }
+      }));
     }).catch(reason => {
       const shouldRetry = retry > 0;
       // Failure, promise rejected.
@@ -506,7 +555,7 @@ function apiRequest<Output>(
       if (shouldRetry) {
         setTimeout(() =>
             apiRequest(
-              input, init, request, dispatch, mapResponse,
+              input, pars, request, dispatch, mapResponse,
               retry - 1,
               Math.min(backoff * 2, maxBackoff),
               maxBackoff

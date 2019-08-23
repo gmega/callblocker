@@ -3,7 +3,9 @@ import {Map as IMap} from 'immutable';
 import type {ApiAction, ApiRequest, AsyncList} from '../actions/api';
 import {
   CLEAR_CACHE,
+  COMPLETE,
   CREATE_CALLER,
+  DELETE_CALLER,
   EMPTY_ASYNC_LIST,
   FETCH_CALLERS,
   FETCH_CALLS,
@@ -11,6 +13,7 @@ import {
   FETCH_SERVICES,
   PATCH_CALLERS,
   PATCH_SERVICE,
+  SUCCESS,
   updateAsyncList
 } from '../actions/api';
 import type {Call, Caller, LogEntry, Service} from '../types/domainTypes';
@@ -70,8 +73,22 @@ export default (state: ApiState = initialState, action: ApiAction): ApiState => 
         log: updateAsyncList<string>(state.log, action),
         lastRequest: updateLastRequest(state, action)
       };
+    case DELETE_CALLER:
+      let callers = state.callers;
+      // Immediately updates cached objects if request is successful.
+      if (action.status === COMPLETE &&
+        action.outcome.type === SUCCESS &&
+        Array.isArray(callers)) {
+        callers = callers.filter((caller: Caller) => caller.fullNumber !== action.source.fullNumber)
+      }
+      return {
+        ...state,
+        callers: callers,
+        lastRequest: updateLastRequest(state, action)
+      };
     case CREATE_CALLER:
     case PATCH_CALLERS:
+      // FIXME implement caller patching at the UI to avoid forcing refetch.
     case PATCH_SERVICE:
       return {
         ...state,

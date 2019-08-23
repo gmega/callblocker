@@ -6,7 +6,7 @@ import React, {useEffect} from 'react';
 import {connect} from 'react-redux';
 import {Dispatch} from 'redux';
 import type {AsyncList} from '../actions/api';
-import {CallerOrderings, fetchCallers, fetchCalls, patchCallers} from '../actions/api';
+import {CallerOrderings, clearCache, deleteCaller, fetchCallers, fetchCalls, patchCallers} from '../actions/api';
 import {API_PARAMETERS} from './APIConfig';
 import type {Call, Caller, CallerDelta} from '../types/domainTypes';
 import CallerList from './CallerList';
@@ -24,22 +24,29 @@ type CallerPanelProps = {
   calls: IMap<string, AsyncList<Call>>
 }
 
-function CallerPanel(props: CallerPanelProps) {
+function RecentCallers(props: CallerPanelProps) {
 
   const [ordering, setOrdering] = React.useState(0);
   const {dispatch, callers, calls} = props;
 
   useEffect(() => {
+    // Bombs the cached object tree.
+    dispatch(clearCache());
+
     let timer = setInterval(
       () => dispatch(fetchCallers(OPTIONS[ordering].api_parameter)),
       API_PARAMETERS.pollingInterval
     );
 
     return () => clearInterval(timer);
-  });
+  }, []);
 
   function handleCallerEdit(delta: Array<CallerDelta>) {
     dispatch(patchCallers(delta));
+  }
+
+  function handleCallerDelete(caller: Caller) {
+    dispatch(deleteCaller(caller));
   }
 
   function changeOrdering(index: number) {
@@ -73,6 +80,7 @@ function CallerPanel(props: CallerPanelProps) {
             calls={calls}
             onCallerEdit={handleCallerEdit}
             onCallDisplay={refreshCalls}
+            onCallerDelete={handleCallerDelete}
           />
         </Grid>
       </Grid>
@@ -80,4 +88,4 @@ function CallerPanel(props: CallerPanelProps) {
   )
 }
 
-export default connect((state) => state)(CallerPanel);
+export default connect((state) => state)(RecentCallers);

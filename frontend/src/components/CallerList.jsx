@@ -33,6 +33,7 @@ const SELECTED = (caller, selection) => selection.has(caller.fullNumber);
 type BaseCallerListProps = {|
   calls: IMap<string, AsyncList<Call>>,
   onCallerEdit: (delta: Array<CallerDelta>) => void,
+  onCallerDelete: (caller: Caller) => void,
   onSelectionChange: (selection: ISet<string>) => void,
   onCallDisplay: (caller: Caller) => void
 |};
@@ -115,6 +116,7 @@ function CallerListInner(props: CallerListInnerProps) {
               calls={props.calls.get(caller.fullNumber, EMPTY_ASYNC_LIST)}
               onSelect={callerSelected}
               onSubmit={handleSubmit}
+              onDelete={props.onCallerDelete}
               selected={selected.has(caller.fullNumber)}
               onDisplayCalls={props.onCallDisplay}
             />)}
@@ -140,5 +142,6 @@ function CallerListInner(props: CallerListInnerProps) {
 CallerList.defaultProps = {
   onCallerEdit: (delta: Array<CallerDelta>) => undefined,
   onSelectionChange: (selection: ISet<string>) => undefined,
-  onCallDisplay: (caller: Caller) => undefined
+  onCallDisplay: (caller: Caller) => undefined,
+  onCallerDelete: (caller: Caller) => undefined
 };

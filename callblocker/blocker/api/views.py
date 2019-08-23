@@ -186,7 +186,7 @@ class ServicesViewset(ViewSet):
             # Should never happen.
             raise Exception(f'Bad target state {target}.')
 
-        return Response(status=status.HTTP_202_ACCEPTED, data='{"status": "accepted"}', content_type='application/json')
+        return Response(status=status.HTTP_202_ACCEPTED)
 
     def _get_element_or_400(self, content, *path):
         element = path[0]
