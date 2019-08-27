@@ -40,7 +40,9 @@ TOKEN_TYPES = (
     (r'($|[\s]+$)', lambda _: ModemEvent('BLANK', None)),
     (r'RING', lambda _: ModemEvent('RING', None)),
     (r'OK', lambda _: ModemEvent('OK', None)),
-    (r'NMBR = ([0-9]+)', lambda match: ModemEvent('CALL_ID', match.group(1))),
+    # The ([^0-9]*?) is for matching the "garbage prefix" that seems to appear in the caller
+    # ID every once in a while.
+    (r'NMBR = ([^0-9]*?)([0-9]+)', lambda match: ModemEvent('CALL_ID', match.group(2))),
     (r'AT[\S]+', lambda match: ModemEvent('AT_COMMAND', match.group(0))),
     (r'.*', lambda match: ModemEvent('UNKNOWN', match.group(0)))
 )
