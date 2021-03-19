@@ -1,7 +1,7 @@
 Django==2.2.13
 djangorestframework-bulk==0.2.1
 django-cors-headers==3.0.2
-djangorestframework==3.9.4
+djangorestframework==3.11.2
 drf-nested-routers==0.91
 netifaces==0.10.9
 psycopg2==2.8.3
