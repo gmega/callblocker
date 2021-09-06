@@ -64,7 +64,6 @@ export default () => {
     <Nop>
       <Tabs value={active} onChange={handleChange}>
         <Tab label="System"/>
-        <Tab label="Modem"/>
       </Tabs>
       <TabPanel value={active} index={0}>
         {systemTab()}
