@@ -41,7 +41,7 @@
     "immutable": "^4.0.0-rc.12",
     "jest": "^24.8.0",
     "memoize-one": "^5.0.5",
-    "moment": "^2.24.0",
+    "moment": "^2.29.4",
     "notistack": "^0.8.9",
     "organize-js-imports": "^1.2.1",
     "prop-types": "^15.7.2",
